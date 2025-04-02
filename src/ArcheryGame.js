@@ -206,7 +206,7 @@ const ArcheryGame = () => {
     ctx.beginPath();
     ctx.lineWidth = 2;
     ctx.strokeStyle = "#111";
-    ctx.arc(0, 0, 20, -Math.PI / 2, Math.PI / 2, false);
+    ctx.arc(0, 0, 20, Math.PI / 2, -Math.PI / 2, true);
     ctx.stroke();
 
     // Bow string
@@ -279,19 +279,17 @@ const ArcheryGame = () => {
     ctx.save();
     ctx.translate(x - 25, y - 115); // Bow anchor point
 
-    // Bow arc (facing left)
-    ctx.beginPath();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "#111";
-    ctx.arc(0, 0, 20, Math.PI / 2, -Math.PI / 2, false); // Adjusted arc direction
-    ctx.stroke();
+ctx.beginPath();
+ctx.lineWidth = 2;
+ctx.strokeStyle = "#111";
+ctx.arc(0, 0, 20, Math.PI / 2, -Math.PI / 2, false);
+ctx.stroke();
 
-    // Bow string (right side of arc)
-    ctx.beginPath();
-    ctx.moveTo(20, -20);
-    ctx.lineTo(20, 20);
-    ctx.strokeStyle = "#666";
-    ctx.stroke();
+ctx.beginPath();
+ctx.moveTo(0, -20);
+ctx.lineTo(0, 20);
+ctx.strokeStyle = "#666";
+ctx.stroke();
 
     ctx.restore(); // Restore bow translation
     ctx.restore(); // Restore overall context
