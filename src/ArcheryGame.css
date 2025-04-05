@@ -1,120 +1,176 @@
 /* ArcheryGame.css */
 .archery-game-container {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
-    background: #333; /* Or a background image if you prefer */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  /* Scoreboards at the top corners */
-  .scoreboard-top-left {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    color: #fff;
-    background: rgba(0,0,0,0.4);
-    padding: 10px;
-    border-radius: 4px;
-    text-align: left;
-  }
-  
-  .scoreboard-top-right {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    color: #fff;
-    background: rgba(0,0,0,0.4);
-    padding: 10px;
-    border-radius: 4px;
-    text-align: right;
-  }
-  
-  /* The canvas is centered, with a border or shadow */
-  .game-canvas {
-    display: block;
-    margin-top: 50px; /* create some spacing from the top */
-    border: 2px solid #555;
-    box-shadow: 0 0 20px rgba(0,0,0,0.7);
-  }
-  
-  /* Bottom controls container */
-  .bottom-controls {
-    position: absolute;
-    bottom: 20px;
+  position: relative;
+  width: 100%;
+  height: 100vh; /* Use viewport height */
+  overflow: hidden;
+  background: #1a1a1a; /* Dark background for the page */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* Center canvas vertically and horizontally */
+  padding-top: 60px; /* Add padding to prevent overlap with absolute scoreboards */
+  padding-bottom: 80px; /* Add padding to prevent overlap with absolute controls */
+  box-sizing: border-box; /* Include padding in element's total width and height */
+}
+
+/* Scoreboards */
+.scoreboard {
+  position: absolute;
+  top: 15px;
+  color: #e0e0e0; /* Light grey text */
+  background: rgba(0, 0, 0, 0.5); /* Slightly transparent black */
+  padding: 8px 15px;
+  border-radius: 5px;
+  border: 1px solid #444; /* Subtle border */
+  font-family: 'Arial', sans-serif; /* Cleaner font */
+  font-size: 0.9rem;
+  min-width: 120px; /* Ensure minimum width */
+}
+.scoreboard h3 {
+  margin: 0 0 5px 0;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ffffff; /* White heading */
+  border-bottom: 1px solid #555; /* Separator */
+  padding-bottom: 3px;
+}
+.scoreboard p {
+  margin: 4px 0;
+}
+
+.scoreboard-top-left {
+  left: 15px;
+  text-align: left;
+}
+
+.scoreboard-top-right {
+  right: 15px;
+  text-align: right;
+}
+
+
+/* Canvas */
+.game-canvas {
+  display: block;
+  /* Remove margin-top, centering is handled by flexbox */
+  border: 1px solid #555; /* Keep a subtle border */
+  box-shadow: 0 0 15px rgba(255, 80, 80, 0.3); /* Optional subtle red glow */
+  /* Canvas size is set via props, ensure it doesn't exceed container */
+  max-width: 100%;
+  max-height: calc(100vh - 140px); /* Adjust based on padding */
+  background: #2b2b2b; /* Default dark background if needed */
+}
+
+/* Bottom controls container */
+.controls-area {
+    position: absolute; /* Keep positioning */
+    bottom: 10px;       /* Closer to bottom edge */
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0,0,0,0.6);
-    padding: 15px 20px;
-    border-radius: 6px;
-    display: flex;
-    gap: 20px;
-    align-items: center;
-  }
-  
-  /* Sliders */
-  .slider-group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    color: #fff;
-    font-size: 0.9rem;
-  }
-  .slider-group label {
-    margin-bottom: 5px;
-  }
-  .slider-group span {
-    font-weight: bold;
-    color: #ffd166;
-  }
-  input[type="range"] {
-    width: 120px;
-    -webkit-appearance: none;
-    background: #444;
-    height: 6px;
-    border-radius: 3px;
-    outline: none;
-    cursor: pointer;
-  }
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    background-color: #ffd166;
-    border: 2px solid #fff;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-  input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.1);
-  }
-  
-  /* Fire button */
-  .fire-button {
-    padding: 10px 20px;
+    width: auto; /* Adjust width based on content */
+    max-width: 90%;
+    box-sizing: border-box;
+}
+
+.bottom-controls {
+  /* Removed absolute positioning from here, handled by controls-area */
+  display: flex;
+  gap: 15px; /* Slightly reduced gap */
+  align-items: center;
+  background: rgba(0, 0, 0, 0.7); /* Darker, more opaque background */
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid #444;
+}
+
+/* Sliders */
+.slider-group {
+  display: flex;
+  align-items: center; /* Align label and slider horizontally */
+  gap: 8px;
+  color: #e0e0e0;
+  font-size: 0.9rem;
+}
+.slider-group label {
+  margin-bottom: 0; /* Remove bottom margin */
+  white-space: nowrap; /* Prevent label wrapping */
+}
+.slider-group span {
+  font-weight: bold;
+  color: #ffcc66; /* Keep a distinct color for value */
+  min-width: 25px; /* Ensure space for value */
+  display: inline-block;
+  text-align: right;
+}
+input[type="range"] {
+  width: 100px; /* Slightly smaller */
+  -webkit-appearance: none;
+  appearance: none; /* Standard property */
+  background: #555; /* Darker track */
+  height: 5px;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #ff6b6b; /* Red thumb */
+  border: 1px solid #fff; /* White border */
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+input[type="range"]::-moz-range-thumb { /* Firefox */
+  background-color: #ff6b6b;
+  border: 1px solid #fff;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.15);
+}
+
+/* Fire button */
+.fire-button {
+  padding: 8px 18px; /* Slightly smaller padding */
+  font-size: 0.95rem;
+  font-weight: bold;
+  background-color: #ff4757; /* Bright red */
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.25s, transform 0.15s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+.fire-button:hover {
+  background-color: #e02a3a; /* Darker red on hover */
+}
+.fire-button:active {
+  transform: scale(0.97);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.fire-button:disabled {
+  background-color: #666; /* Dark grey when disabled */
+  color: #aaa;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Messages */
+.round-over-message, .loading-message {
+    color: #e0e0e0;
     font-size: 1rem;
-    font-weight: 600;
-    background-color: #ef476f;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.25s, transform 0.15s;
-  }
-  .fire-button:hover {
-    background-color: #d42c54;
-  }
-  .fire-button:active {
-    transform: scale(0.96);
-  }
-  .fire-button:disabled {
-    background-color: #555;
-    cursor: not-allowed;
-    transform: none;
-  }
-  
+    padding: 10px;
+    text-align: center;
+}
