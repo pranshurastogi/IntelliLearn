@@ -261,7 +261,7 @@ const ArcheryGame = () => {
     ctx.save();
     ctx.translate(frontArmX, frontArmY); // Move to bow anchor point
     ctx.lineWidth = 3; ctx.strokeStyle = "#8B4513"; // Brown bow
-    ctx.beginPath(); ctx.arc(0, 0, bowRadius, -Math.PI / 2, Math.PI / 2, false); ctx.stroke(); // Semicircle facing player
+    ctx.beginPath(); ctx.arc(0, 0, bowRadius, Math.PI / 2, -Math.PI / 2, false); ctx.stroke(); // Semicircle facing player
     ctx.lineWidth = 1; ctx.strokeStyle = "#A9A9A9"; // Grey string
     ctx.beginPath(); ctx.moveTo(0, -bowRadius); ctx.lineTo(0, bowRadius); ctx.stroke(); // Straight string
     ctx.restore(); // Restore bow translation
