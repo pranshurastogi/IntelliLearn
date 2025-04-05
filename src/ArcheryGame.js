@@ -11,6 +11,8 @@ const GRAVITY = 0.3 * SCALE_FACTOR; // Apply scale to gravity for visual consist
 const BASE_ENEMY_SPEED = 15 * Math.sqrt(SCALE_FACTOR); // Adjust speed based on scale
 const enemy_firetime = 2000
 const enemyPower = [0, 0, 0, 1];
+const enemyNames = ["Alpha", "Beta", "Gamma", "Omega"];
+
 
 
 const ArcheryGame = () => {
@@ -64,85 +66,70 @@ const ArcheryGame = () => {
 
   const generateRandomPositions = useCallback((canvas) => {
     if (!canvas) return { player: { x: 0, y: 0 }, enemies: [] };
-
-    const minY = canvas.height - 200 * SCALE_FACTOR; // Base ground level calculation remains
+  
+    const minY = canvas.height - 200 * SCALE_FACTOR;
     const maxY = canvas.height - 50 * SCALE_FACTOR;
-
-    // 1. Place the Player first
+  
+    // 1. Player
     const playerMinX = canvas.width * 0.05;
-    const playerMaxX = canvas.width * 0.15; // Keep player somewhat left
+    const playerMaxX = canvas.width * 0.15;
     const playerX = Math.random() * (playerMaxX - playerMinX) + playerMinX;
     const playerY = Math.random() * (maxY - minY) + minY;
     const playerPos = { x: playerX, y: playerY };
-
-    // 2. Place Enemies, avoiding player and other enemies
+  
+    // 2. Enemies
     const enemies = [];
-    const enemyPlacementAttempts = 100; // Max attempts per enemy to find a spot
-    const safeZoneFromPlayer = MIN_ENEMY_DISTANCE * 1.5; // Ensure enemies aren't right on top of player
-
-    // Define wider bounds for enemy X placement
-    const enemyMinX = playerMaxX + 50 * SCALE_FACTOR; // Start enemies clearly to the right of player's zone
-    const enemyMaxX = canvas.width - 50 * SCALE_FACTOR; // Leave margin on the right edge
-
+    const enemyPlacementAttempts = 100;
+    const safeZoneFromPlayer = MIN_ENEMY_DISTANCE * 1.5;
+  
+    const enemyMinX = playerMaxX + 50 * SCALE_FACTOR;
+    const enemyMaxX = canvas.width - 50 * SCALE_FACTOR;
+  
     for (let i = 0; i < NUM_ENEMIES; i++) {
-      let enemyX,
-        enemyY,
-        validPosition = false;
+      let enemyX, enemyY;
+      let validPosition = false;
       let attempts = 0;
-
+  
       while (!validPosition && attempts < enemyPlacementAttempts) {
         attempts++;
-        // Generate a candidate position anywhere within the wider allowed range
         enemyX = Math.random() * (enemyMaxX - enemyMinX) + enemyMinX;
-        enemyY = Math.random() * (maxY - minY) + minY; // Use same height variation as player
-
-        // Check 1: Distance from Player
+        enemyY = Math.random() * (maxY - minY) + minY;
+  
+        // Check distance from player
         const dxPlayer = enemyX - playerPos.x;
-        const dyPlayer = enemyY - playerPos.y; // Check Y distance too, in case player is high/low
-        if (
-          Math.sqrt(dxPlayer * dxPlayer + dyPlayer * dyPlayer) <
-          safeZoneFromPlayer
-        ) {
-          continue; // Too close to player, try new random position
+        const dyPlayer = enemyY - playerPos.y;
+        if (Math.sqrt(dxPlayer * dxPlayer + dyPlayer * dyPlayer) < safeZoneFromPlayer) {
+          continue; 
         }
-
-        // Check 2: Distance from other already placed Enemies
+  
+        // Check distance from other enemies
         let tooCloseToOtherEnemy = false;
         for (let j = 0; j < enemies.length; j++) {
           const dxEnemy = enemyX - enemies[j].x;
           const dyEnemy = enemyY - enemies[j].y;
-          if (
-            Math.sqrt(dxEnemy * dxEnemy + dyEnemy * dyEnemy) <
-            MIN_ENEMY_DISTANCE
-          ) {
+          if (Math.sqrt(dxEnemy * dxEnemy + dyEnemy * dyEnemy) < MIN_ENEMY_DISTANCE) {
             tooCloseToOtherEnemy = true;
-            break; // Too close to another enemy, try new random position
+            break;
           }
         }
-
+  
         if (!tooCloseToOtherEnemy) {
-          validPosition = true; // Found a good spot!
+          validPosition = true;
         }
-      } // End while seeking valid position
-
-      if (validPosition) {
-        enemies.push({ x: enemyX, y: enemyY, id: i });
-      } else {
-        // Fallback: Could not find a valid non-overlapping position after many attempts.
-        // This might happen if NUM_ENEMIES is too high for the canvas size / MIN_ENEMY_DISTANCE.
-        // Option 1: Place it anyway (might overlap) - Simplest for now.
-        // Option 2: Skip this enemy (reduce NUM_ENEMIES for this round).
-        // Option 3: Throw an error or log a more severe warning.
-        console.warn(
-          `Could not place enemy ${i} without overlap after ${enemyPlacementAttempts} attempts. Placing at last attempted position.`
-        );
-        // Place it at the last (potentially overlapping) position
-        enemies.push({ x: enemyX, y: enemyY, id: i });
       }
-    } // End for each enemy
-
+  
+      if (validPosition) {
+        // Attach a name from enemyNames[i]
+        enemies.push({ x: enemyX, y: enemyY, id: i, name: enemyNames[i] });
+      } else {
+        console.warn(`Could not place enemy ${i} without overlap after ${enemyPlacementAttempts} attempts.`);
+        enemies.push({ x: enemyX, y: enemyY, id: i, name: enemyNames[i] });
+      }
+    }
+  
     return { player: playerPos, enemies };
-  }, []); // SCALE_FACTOR and NUM_ENEMIES are constants, MIN_ENEMY_DISTANCE is constant
+  }, []);
+   // SCALE_FACTOR and NUM_ENEMIES are constants, MIN_ENEMY_DISTANCE is constant
 
   // Fire an enemy arrow for a specific enemy
   const fireEnemyArrow = useCallback(
@@ -456,76 +443,102 @@ const ArcheryGame = () => {
   ); // Removed angle, power, SCALE_FACTOR dependency
 
   // Draw an enemy archer (scaled)
-  const drawEnemyArcher = useCallback(
-    (x, y) => {
-      if (!ctx) return;
-      ctx.save();
-      ctx.fillStyle = "red";
-      ctx.strokeStyle = "red";
-      ctx.lineWidth = 4 * SCALE_FACTOR;
-      const headRadius = 12 * SCALE_FACTOR;
-      const bodyTopOffsetY = -100 * SCALE_FACTOR;
-      const bodyBottomOffsetY = -60 * SCALE_FACTOR;
-      const headOffsetY = y + bodyTopOffsetY - headRadius * 1.5;
-      const groundY = y;
-      const armLength = 25 * SCALE_FACTOR;
-      const bowRadius = 20 * SCALE_FACTOR;
-      const legSpread = 10 * SCALE_FACTOR;
-
-      const bodyTopY = y + bodyTopOffsetY;
-      const bodyBottomY = y + bodyBottomOffsetY;
-
-      ctx.beginPath();
-      ctx.moveTo(x, bodyBottomY);
-      ctx.lineTo(x, bodyTopY);
-      ctx.stroke(); // Body
-      ctx.beginPath();
-      ctx.arc(x, headOffsetY, headRadius, 0, Math.PI * 2);
-      ctx.fill(); // Head
-      ctx.beginPath();
-      ctx.moveTo(x, bodyBottomY);
-      ctx.lineTo(x - legSpread, groundY);
-      ctx.stroke(); // Leg 1
-      ctx.beginPath();
-      ctx.moveTo(x, bodyBottomY);
-      ctx.lineTo(x + legSpread, groundY);
-      ctx.stroke(); // Leg 2
-
-      // Arms (Enemy faces left)
-      const frontArmX = x - armLength; // Arm reaching left towards player
-      const frontArmY = bodyTopY - 5 * SCALE_FACTOR; // Slightly adjusted Y anchor
-      ctx.beginPath();
-      ctx.moveTo(x, bodyTopY);
-      ctx.lineTo(frontArmX, frontArmY);
-      ctx.stroke(); // Front arm (holding bow)
-      ctx.beginPath();
-      ctx.moveTo(x, bodyTopY);
-      ctx.lineTo(x + 15 * SCALE_FACTOR, bodyTopY - 10 * SCALE_FACTOR);
-      ctx.stroke(); // Back arm (static)
-
-      // Draw Static Bow relative to front arm end
-      ctx.save();
-      ctx.translate(frontArmX, frontArmY); // Move to bow anchor point
-      ctx.lineWidth = 3 * SCALE_FACTOR;
-      ctx.strokeStyle = "#8B4513"; // Brown bow
-      ctx.beginPath();
-      ctx.arc(0, 0, bowRadius, Math.PI / 2, -Math.PI / 2, false);
-      ctx.stroke(); // Semicircle facing player (left)
-      ctx.lineWidth = 1 * SCALE_FACTOR;
-      ctx.strokeStyle = "#A9A9A9"; // Grey string
-      ctx.beginPath();
-      ctx.moveTo(0, -bowRadius);
-      ctx.lineTo(0, bowRadius);
-      ctx.stroke(); // Straight string (not drawn)
-      ctx.restore(); // Restore bow translation
-
-      // Optional: Draw debug circle at anchor
-      // ctx.fillStyle = "lime"; ctx.beginPath(); ctx.arc(frontArmX, frontArmY, 3, 0, Math.PI * 2); ctx.fill();
-
-      ctx.restore(); // Restore main context state
-    },
-    [ctx]
-  ); // Removed SCALE_FACTOR dependency
+  const drawEnemyArcher = useCallback((x, y, name) => {
+    if (!ctx) return;
+  
+    ctx.save();
+  
+    // Basic styling
+    ctx.fillStyle = "red";
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 4 * SCALE_FACTOR;
+  
+    // Body metrics
+    const headRadius = 12 * SCALE_FACTOR;
+    const bodyTopOffsetY = -100 * SCALE_FACTOR;
+    const bodyBottomOffsetY = -60 * SCALE_FACTOR;
+    const headOffsetY = y + bodyTopOffsetY - headRadius * 1.5;
+    const groundY = y; // "Ground" for this stick figure
+    const armLength = 25 * SCALE_FACTOR;
+    const bowRadius = 20 * SCALE_FACTOR;
+    const legSpread = 10 * SCALE_FACTOR;
+  
+    const bodyTopY = y + bodyTopOffsetY;
+    const bodyBottomY = y + bodyBottomOffsetY;
+  
+    // --- Body ---
+    ctx.beginPath();
+    ctx.moveTo(x, bodyBottomY);
+    ctx.lineTo(x, bodyTopY);
+    ctx.stroke();
+  
+    // --- Head ---
+    ctx.beginPath();
+    ctx.arc(x, headOffsetY, headRadius, 0, Math.PI * 2);
+    ctx.fill();
+  
+    // --- Legs ---
+    ctx.beginPath();
+    ctx.moveTo(x, bodyBottomY);
+    ctx.lineTo(x - legSpread, groundY);
+    ctx.stroke();
+  
+    ctx.beginPath();
+    ctx.moveTo(x, bodyBottomY);
+    ctx.lineTo(x + legSpread, groundY);
+    ctx.stroke();
+  
+    // --- Arms (facing left) ---
+    const frontArmX = x - armLength;
+    const frontArmY = bodyTopY - 5 * SCALE_FACTOR;
+    // Arm holding the bow
+    ctx.beginPath();
+    ctx.moveTo(x, bodyTopY);
+    ctx.lineTo(frontArmX, frontArmY);
+    ctx.stroke();
+    // Back arm (for a little shape)
+    ctx.beginPath();
+    ctx.moveTo(x, bodyTopY);
+    ctx.lineTo(x + 15 * SCALE_FACTOR, bodyTopY - 10 * SCALE_FACTOR);
+    ctx.stroke();
+  
+    // --- Bow ---
+    ctx.save();
+    ctx.translate(frontArmX, frontArmY);
+    ctx.lineWidth = 3 * SCALE_FACTOR;
+    ctx.strokeStyle = "#8B4513"; // Brown
+    ctx.beginPath();
+    // Arc from -90° to +90° to form bow facing left
+    ctx.arc(0, 0, bowRadius, Math.PI / 2, -Math.PI / 2, false);
+    ctx.stroke();
+  
+    // Bow string
+    ctx.lineWidth = 1 * SCALE_FACTOR;
+    ctx.strokeStyle = "#A9A9A9"; // Gray
+    ctx.beginPath();
+    ctx.moveTo(0, -bowRadius);
+    ctx.lineTo(0, bowRadius);
+    ctx.stroke();
+  
+    ctx.restore(); // Restore after bow
+  
+    // --- Draw Enemy Name above head ---
+    ctx.save();
+    ctx.font = `${14 * SCALE_FACTOR}px Arial`;
+    ctx.fillStyle = "black";
+  
+    // Measure the text for horizontal centering
+    const textWidth = ctx.measureText(name).width;
+    // Place text above the head
+    const textX = x - (textWidth / 2);
+    const textY = headOffsetY - (20 * SCALE_FACTOR); // 10px above head
+  
+    ctx.fillText(name, textX, textY);
+    ctx.restore();
+  
+    ctx.restore(); // Restore main context
+  }, [ctx]);
+   // Removed SCALE_FACTOR dependency
 
   // Draw the entire game scene
   const drawGame = useCallback(() => {
@@ -546,7 +559,7 @@ const ArcheryGame = () => {
 
     // Draw Enemies
     positions.enemies.forEach((enemy) => {
-      drawEnemyArcher(enemy.x, enemy.y);
+      drawEnemyArcher(enemy.x, enemy.y,enemy.name);
     });
 
     // Draw Player Arrow
