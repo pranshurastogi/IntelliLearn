@@ -54,6 +54,7 @@ const THEME_COLORS = {
 const ArcheryGame = () => {
   const canvasRef = useRef(null);
   const requestRef = useRef(null);
+  const enemyArrowsRef = useRef([]);
   const [ctx, setCtx] = useState(null);
   const [enemyCanFire, setEnemyCanFire] = useState(false);
 
@@ -96,6 +97,10 @@ const ArcheryGame = () => {
     nextShotDelay: Math.random() * 1500 + 1000,
     shotsFired: 0,
     power, // 0 or 1
+    isDrawingBow: false,
+    drawProgress: 0,       // increments from 0 to 1
+    drawDuration: 300,     // ms - how long the bow-draw lasts
+    firePending: false
   });
 
   // --- Memoized Functions ---
@@ -187,9 +192,6 @@ const ArcheryGame = () => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
     [
-      SCALE_FACTOR,
-      NUM_ENEMIES,
-      MIN_ENEMY_DISTANCE,
       PLATFORM_WIDTH,
       PLATFORM_HEIGHT,
       CHARACTER_FOOT_OFFSET,
@@ -201,37 +203,37 @@ const ArcheryGame = () => {
     (enemyIndex) => {
       const enemy = positions.enemies[enemyIndex];
       const enemyAi = enemyAiRef.current[enemyIndex];
+      
+      // Early exit checks using both state and ref
       if (
         roundOver ||
         !enemy ||
         !enemyAi ||
-        enemyArrows.some((arrow) => arrow.enemyIndex === enemyIndex)
+        enemyArrowsRef.current.some(arrow => arrow.enemyIndex === enemyIndex)
       ) {
         return;
       }
-
+  
+      // Update shot counters
       enemyAi.shotsFired++;
-      setEnemyTotalShots((prev) => prev + 1);
-
-      // Character dimensions (relative to enemy.x, enemy.y)
-      const bodyTopOffsetY = -60 * SCALE_FACTOR; // Adjusted for new style
+      setEnemyTotalShots(prev => prev + 1); // This will correctly increment by 1
+  
+      // Calculate firing position
+      const bodyTopOffsetY = -60 * SCALE_FACTOR;
       const armLength = 20 * SCALE_FACTOR;
-
-      // Aiming from the bow position (left side of enemy)
-      const bowAnchorX = enemy.x - armLength * 0.5; // Approx bow center X
-      const bowAnchorY = enemy.y + bodyTopOffsetY; // Approx bow center Y
-
-      // Target player's center mass
+      const bowAnchorX = enemy.x - armLength * 0.5;
+      const bowAnchorY = enemy.y + bodyTopOffsetY;
+  
+      // Calculate trajectory
       const targetX = positions.player.x;
-      const targetY = positions.player.y - 30 * SCALE_FACTOR; // Aim slightly higher than feet
+      const targetY = positions.player.y - 30 * SCALE_FACTOR;
       const dx = targetX - bowAnchorX;
       const dy = targetY - bowAnchorY;
-
-      // Calculate base angle + AI adjustment
       const baseAngleRad = Math.atan2(dy, dx);
       const launchAngleRad = baseAngleRad + enemyAi.lastAngle;
       const launchSpeed = enemyAi.lastSpeed;
-
+  
+      // Create new arrow
       const newArrow = {
         x: bowAnchorX,
         y: bowAnchorY,
@@ -242,13 +244,19 @@ const ArcheryGame = () => {
         minMissDistance: Infinity,
         power: enemyAi.power,
       };
-
-      setEnemyArrows((prev) => [...prev, newArrow]);
+  
+      // Update state and ref atomically
+      setEnemyArrows(prev => {
+        const updatedArrows = [...prev, newArrow];
+        enemyArrowsRef.current = updatedArrows; // Keep ref in sync
+        return updatedArrows;
+      });
+  
+      // Reset AI timing values
       enemyAi.missDistance = 0;
       enemyAi.nextShotDelay = Math.random() * 2000 + 1500;
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [roundOver, positions, enemyArrows, SCALE_FACTOR /* Add others if needed */]
+    [roundOver, positions]
   );
 
   // Start new round
@@ -303,7 +311,7 @@ const ArcheryGame = () => {
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [roundOver, SCALE_FACTOR /* Add others if needed */]
+    [roundOver /* Add others if needed */]
   );
 
   // Handle hit
@@ -379,7 +387,7 @@ const ArcheryGame = () => {
 
       ctx.restore();
     },
-    [ctx, SCALE_FACTOR]
+    [ctx]
   ); // Added SCALE_FACTOR dependency
 
   // Draw player archer (SILHOUETTE STYLE - Rearranged Order)
@@ -542,13 +550,13 @@ const ArcheryGame = () => {
 
         ctx.restore(); // Restore initial context state
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ctx, SCALE_FACTOR, CHARACTER_FOOT_OFFSET, THEME_COLORS]); // Dependencies
+    }, [ctx, CHARACTER_FOOT_OFFSET, THEME_COLORS]); // Dependencies
 
   // Draw enemy archer (new style)
   // Draw enemy archer (new style)
   // Draw enemy archer (NEW STYLE with ACCENT)
   const drawEnemyArcher = useCallback(
-    (x, y, name) => {
+    (x, y, name,bowDraw = 0) => {
       if (!ctx) return;
       ctx.save();
       const bodyColor = THEME_COLORS.ENEMY; // Black
@@ -629,11 +637,20 @@ const ArcheryGame = () => {
 
       // Draw Bow String (straight)
       ctx.strokeStyle = THEME_COLORS.BOW_STRING;
-      ctx.lineWidth = 1 * SCALE_FACTOR;
-      ctx.beginPath();
-      ctx.moveTo(0, bowRadius);
-      ctx.lineTo(0, -bowRadius);
-      ctx.stroke();
+    ctx.lineWidth = 1 * SCALE_FACTOR;
+    ctx.beginPath();
+    const topTipX = 0;
+    const topTipY = bowRadius;
+    const bottomTipX = 0;
+    const bottomTipY = -bowRadius;
+    const maxPull = 15 * SCALE_FACTOR;
+    const pullX = maxPull * bowDraw;
+    const pullY = 0;
+
+    ctx.moveTo(topTipX, topTipY);
+    ctx.lineTo(pullX, pullY);
+    ctx.lineTo(bottomTipX, bottomTipY);
+    ctx.stroke();
 
       ctx.restore(); // Restore bow context
 
@@ -649,7 +666,7 @@ const ArcheryGame = () => {
       ctx.restore(); // Restore main enemy context
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [ctx, SCALE_FACTOR, CHARACTER_FOOT_OFFSET, THEME_COLORS]
+    [ctx, CHARACTER_FOOT_OFFSET]
   ); // Added THEME_COLORS dependency // Make sure dependencies are correct // Added dependencies
 
   // Draw the entire game scene (new style)
@@ -754,7 +771,9 @@ const ArcheryGame = () => {
       drawPlayerArcher(positions.player.x, positions.player.y, angle, power);
     }
     positions.enemies.forEach((enemy) => {
-      drawEnemyArcher(enemy.x, enemy.y, enemy.name);
+      const aiState = enemyAiRef.current[enemy.id];
+      const drawProgress = aiState?.isDrawingBow ? aiState.drawProgress : 0;
+      drawEnemyArcher(enemy.x, enemy.y, enemy.name, drawProgress);
     });
 
     // 7. Draw Arrows (Uses updated THEME_COLORS.ARROW/HEAD implicitly)
@@ -814,7 +833,7 @@ const ArcheryGame = () => {
       vy: speed * Math.sin(angleRad),
       id: Date.now(),
     });
-  }, [roundOver, playerArrow, positions, angle, power, SCALE_FACTOR]); // Added dependencies
+  }, [roundOver, playerArrow, positions, angle, power]); // Added dependencies
 
   // --- Effects ---
 
@@ -846,8 +865,16 @@ const ArcheryGame = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
 
+  useEffect(() => {
+    console.log('enemyArrowsRef');
+    
+    enemyArrowsRef.current = enemyArrows;
+  }, [enemyArrows]);
+
   // Effect 2: Main game loop (Animation, Physics, AI Shooting Trigger)
   useEffect(() => {
+    // console.log('ctx');
+    
     if (!ctx) return;
 
     let lastTimestamp = 0;
@@ -863,25 +890,35 @@ const ArcheryGame = () => {
         // Ensure deltaTime is positive
         // --- Enemy Shooting ---
         if (enemyCanFire && enemyAiRef.current.length === NUM_ENEMIES) {
-          enemyAiRef.current.forEach((aiState, index) => {
-            aiState.nextShotDelay -= deltaTime;
-            if (aiState.nextShotDelay <= 0) {
-              const hasArrow = enemyArrows.some(
-                (arrow) => arrow.enemyIndex === index
-              );
-              if (!hasArrow && positions.enemies[index]) {
-                fireEnemyArrow(index);
-                // Reset delay even if fire failed (e.g. no position yet)
-                // This happens inside fireEnemyArrow now
-              } else if (!hasArrow) {
-                // If enemy doesn't exist yet but timer ran out, reset delay
-                aiState.nextShotDelay = 500;
-              } else {
-                // If has arrow, short delay before retry
-                aiState.nextShotDelay = 200;
-              }
-            }
-          });
+          // --- Inside your animate function, near enemyAiRef.current.forEach(...) ---
+enemyAiRef.current.forEach((aiState, index) => {
+  // If the bow is not drawing, decrement nextShotDelay to see if it's time to draw
+  if (!aiState.isDrawingBow) {
+    aiState.nextShotDelay -= deltaTime;
+    if (aiState.nextShotDelay <= 0) {
+      // Start drawing the bow (but do NOT fire immediately)
+      aiState.isDrawingBow = true;
+      aiState.drawProgress = 0;
+      aiState.firePending = true; // We'll fire after we complete the draw
+    }
+  } else {
+    // We are currently drawing the bow:
+    aiState.drawProgress += deltaTime / aiState.drawDuration;
+    if (aiState.drawProgress >= 1 && aiState.firePending) {
+      // Reached full draw -> actually fire
+      aiState.isDrawingBow = false;
+      aiState.drawProgress = 0;
+      aiState.firePending = false;
+
+      // Now we fire the arrow for real
+      fireEnemyArrow(index);
+
+      // Reset nextShotDelay so we wait some time before next shot
+      aiState.nextShotDelay = Math.random() * 2000 + 1500;
+    }
+  }
+});
+
         }
 
         // --- Physics Updates ---
@@ -998,7 +1035,7 @@ const ArcheryGame = () => {
                 if (enemyAiRef.current[arrow.enemyIndex]) {
                   learnFromMiss(arrow.enemyIndex, distPlayer); // Learn even on non-critical hits
                 }
-                arrowRemoved = true;
+                arrowRemoved = true; // eslint-disable-line no-unused-vars
                 updateState = true; // Arrow removed
               } else {
                 // Keep arrow, update position and minMissDistance
@@ -1055,14 +1092,6 @@ const ArcheryGame = () => {
     learnFromMiss,
     handleHit,
     drawGame,
-    // Constants/Config used in physics/collision:
-    GRAVITY,
-    SCALE_FACTOR,
-    PLAYER_HIT_RADIUS,
-    ENEMY_HIT_RADIUS,
-    NUM_ENEMIES,
-    // Note: angle, power are only used by drawGame & firePlayerArrow (event handler)
-    // startNewRound is called by handleHit, so indirectly included
   ]);
 
   // --- Render JSX ---
