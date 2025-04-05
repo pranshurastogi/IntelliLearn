@@ -9,11 +9,9 @@ const PLAYER_HIT_RADIUS = 35 * SCALE_FACTOR; // Scaled hit radius
 const ENEMY_HIT_RADIUS = 35 * SCALE_FACTOR; // Scaled hit radius
 const GRAVITY = 0.3 * SCALE_FACTOR; // Apply scale to gravity for visual consistency? (Optional)
 const BASE_ENEMY_SPEED = 15 * Math.sqrt(SCALE_FACTOR); // Adjust speed based on scale
-const enemy_firetime = 2000
+const enemy_firetime = 2000;
 const enemyPower = [0, 0, 0, 1];
 const enemyNames = ["Alpha", "Beta", "Gamma", "Omega"];
-
-
 
 const ArcheryGame = () => {
   const canvasRef = useRef(null);
@@ -57,7 +55,7 @@ const ArcheryGame = () => {
     improvementFactor: 0.3 + (Math.random() - 0.5) * 0.1,
     nextShotDelay: Math.random() * 1500 + 1000,
     shotsFired: 0,
-  
+
     // NEW:
     power, // 0 or 1
   });
@@ -66,70 +64,78 @@ const ArcheryGame = () => {
 
   const generateRandomPositions = useCallback((canvas) => {
     if (!canvas) return { player: { x: 0, y: 0 }, enemies: [] };
-  
+
     const minY = canvas.height - 200 * SCALE_FACTOR;
     const maxY = canvas.height - 50 * SCALE_FACTOR;
-  
+
     // 1. Player
     const playerMinX = canvas.width * 0.05;
     const playerMaxX = canvas.width * 0.15;
     const playerX = Math.random() * (playerMaxX - playerMinX) + playerMinX;
     const playerY = Math.random() * (maxY - minY) + minY;
     const playerPos = { x: playerX, y: playerY };
-  
+
     // 2. Enemies
     const enemies = [];
     const enemyPlacementAttempts = 100;
     const safeZoneFromPlayer = MIN_ENEMY_DISTANCE * 1.5;
-  
+
     const enemyMinX = playerMaxX + 50 * SCALE_FACTOR;
     const enemyMaxX = canvas.width - 50 * SCALE_FACTOR;
-  
+
     for (let i = 0; i < NUM_ENEMIES; i++) {
       let enemyX, enemyY;
       let validPosition = false;
       let attempts = 0;
-  
+
       while (!validPosition && attempts < enemyPlacementAttempts) {
         attempts++;
         enemyX = Math.random() * (enemyMaxX - enemyMinX) + enemyMinX;
         enemyY = Math.random() * (maxY - minY) + minY;
-  
+
         // Check distance from player
         const dxPlayer = enemyX - playerPos.x;
         const dyPlayer = enemyY - playerPos.y;
-        if (Math.sqrt(dxPlayer * dxPlayer + dyPlayer * dyPlayer) < safeZoneFromPlayer) {
-          continue; 
+        if (
+          Math.sqrt(dxPlayer * dxPlayer + dyPlayer * dyPlayer) <
+          safeZoneFromPlayer
+        ) {
+          continue;
         }
-  
+
         // Check distance from other enemies
         let tooCloseToOtherEnemy = false;
         for (let j = 0; j < enemies.length; j++) {
           const dxEnemy = enemyX - enemies[j].x;
           const dyEnemy = enemyY - enemies[j].y;
-          if (Math.sqrt(dxEnemy * dxEnemy + dyEnemy * dyEnemy) < MIN_ENEMY_DISTANCE) {
+          if (
+            Math.sqrt(dxEnemy * dxEnemy + dyEnemy * dyEnemy) <
+            MIN_ENEMY_DISTANCE
+          ) {
             tooCloseToOtherEnemy = true;
             break;
           }
         }
-  
+
         if (!tooCloseToOtherEnemy) {
           validPosition = true;
         }
       }
-  
+
       if (validPosition) {
         // Attach a name from enemyNames[i]
         enemies.push({ x: enemyX, y: enemyY, id: i, name: enemyNames[i] });
       } else {
-        console.warn(`Could not place enemy ${i} without overlap after ${enemyPlacementAttempts} attempts.`);
+        console.warn(
+          `Could not place enemy ${i} without overlap after ${enemyPlacementAttempts} attempts.`
+        );
         enemies.push({ x: enemyX, y: enemyY, id: i, name: enemyNames[i] });
       }
     }
-  
+
     return { player: playerPos, enemies };
   }, []);
-   // SCALE_FACTOR and NUM_ENEMIES are constants, MIN_ENEMY_DISTANCE is constant
+  // SCALE_FACTOR and NUM_ENEMIES are constants, MIN_ENEMY_DISTANCE is constant
 
   // Fire an enemy arrow for a specific enemy
   const fireEnemyArrow = useCallback(
@@ -181,7 +187,7 @@ const ArcheryGame = () => {
         id: Date.now() + Math.random(),
         enemyIndex,
         minMissDistance: Infinity,
-    
+
         // NEW: carry over the enemy’s power
         power: enemyAi.power,
       };
@@ -443,102 +449,105 @@ const ArcheryGame = () => {
   ); // Removed angle, power, SCALE_FACTOR dependency
 
   // Draw an enemy archer (scaled)
-  const drawEnemyArcher = useCallback((x, y, name) => {
-    if (!ctx) return;
-  
-    ctx.save();
-  
-    // Basic styling
-    ctx.fillStyle = "red";
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 4 * SCALE_FACTOR;
-  
-    // Body metrics
-    const headRadius = 12 * SCALE_FACTOR;
-    const bodyTopOffsetY = -100 * SCALE_FACTOR;
-    const bodyBottomOffsetY = -60 * SCALE_FACTOR;
-    const headOffsetY = y + bodyTopOffsetY - headRadius * 1.5;
-    const groundY = y; // "Ground" for this stick figure
-    const armLength = 25 * SCALE_FACTOR;
-    const bowRadius = 20 * SCALE_FACTOR;
-    const legSpread = 10 * SCALE_FACTOR;
-  
-    const bodyTopY = y + bodyTopOffsetY;
-    const bodyBottomY = y + bodyBottomOffsetY;
-  
-    // --- Body ---
-    ctx.beginPath();
-    ctx.moveTo(x, bodyBottomY);
-    ctx.lineTo(x, bodyTopY);
-    ctx.stroke();
-  
-    // --- Head ---
-    ctx.beginPath();
-    ctx.arc(x, headOffsetY, headRadius, 0, Math.PI * 2);
-    ctx.fill();
-  
-    // --- Legs ---
-    ctx.beginPath();
-    ctx.moveTo(x, bodyBottomY);
-    ctx.lineTo(x - legSpread, groundY);
-    ctx.stroke();
-  
-    ctx.beginPath();
-    ctx.moveTo(x, bodyBottomY);
-    ctx.lineTo(x + legSpread, groundY);
-    ctx.stroke();
-  
-    // --- Arms (facing left) ---
-    const frontArmX = x - armLength;
-    const frontArmY = bodyTopY - 5 * SCALE_FACTOR;
-    // Arm holding the bow
-    ctx.beginPath();
-    ctx.moveTo(x, bodyTopY);
-    ctx.lineTo(frontArmX, frontArmY);
-    ctx.stroke();
-    // Back arm (for a little shape)
-    ctx.beginPath();
-    ctx.moveTo(x, bodyTopY);
-    ctx.lineTo(x + 15 * SCALE_FACTOR, bodyTopY - 10 * SCALE_FACTOR);
-    ctx.stroke();
-  
-    // --- Bow ---
-    ctx.save();
-    ctx.translate(frontArmX, frontArmY);
-    ctx.lineWidth = 3 * SCALE_FACTOR;
-    ctx.strokeStyle = "#8B4513"; // Brown
-    ctx.beginPath();
-    // Arc from -90° to +90° to form bow facing left
-    ctx.arc(0, 0, bowRadius, Math.PI / 2, -Math.PI / 2, false);
-    ctx.stroke();
-  
-    // Bow string
-    ctx.lineWidth = 1 * SCALE_FACTOR;
-    ctx.strokeStyle = "#A9A9A9"; // Gray
-    ctx.beginPath();
-    ctx.moveTo(0, -bowRadius);
-    ctx.lineTo(0, bowRadius);
-    ctx.stroke();
-  
-    ctx.restore(); // Restore after bow
-  
-    // --- Draw Enemy Name above head ---
-    ctx.save();
-    ctx.font = `${14 * SCALE_FACTOR}px Arial`;
-    ctx.fillStyle = "black";
-  
-    // Measure the text for horizontal centering
-    const textWidth = ctx.measureText(name).width;
-    // Place text above the head
-    const textX = x - (textWidth / 2);
-    const textY = headOffsetY - (20 * SCALE_FACTOR); // 10px above head
-  
-    ctx.fillText(name, textX, textY);
-    ctx.restore();
-  
-    ctx.restore(); // Restore main context
-  }, [ctx]);
-   // Removed SCALE_FACTOR dependency
+  const drawEnemyArcher = useCallback(
+    (x, y, name) => {
+      if (!ctx) return;
+
+      ctx.save();
+
+      // Basic styling
+      ctx.fillStyle = "red";
+      ctx.strokeStyle = "red";
+      ctx.lineWidth = 4 * SCALE_FACTOR;
+
+      // Body metrics
+      const headRadius = 12 * SCALE_FACTOR;
+      const bodyTopOffsetY = -100 * SCALE_FACTOR;
+      const bodyBottomOffsetY = -60 * SCALE_FACTOR;
+      const headOffsetY = y + bodyTopOffsetY - headRadius * 1.5;
+      const groundY = y; // "Ground" for this stick figure
+      const armLength = 25 * SCALE_FACTOR;
+      const bowRadius = 20 * SCALE_FACTOR;
+      const legSpread = 10 * SCALE_FACTOR;
+
+      const bodyTopY = y + bodyTopOffsetY;
+      const bodyBottomY = y + bodyBottomOffsetY;
+
+      // --- Body ---
+      ctx.beginPath();
+      ctx.moveTo(x, bodyBottomY);
+      ctx.lineTo(x, bodyTopY);
+      ctx.stroke();
+
+      // --- Head ---
+      ctx.beginPath();
+      ctx.arc(x, headOffsetY, headRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // --- Legs ---
+      ctx.beginPath();
+      ctx.moveTo(x, bodyBottomY);
+      ctx.lineTo(x - legSpread, groundY);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(x, bodyBottomY);
+      ctx.lineTo(x + legSpread, groundY);
+      ctx.stroke();
+
+      // --- Arms (facing left) ---
+      const frontArmX = x - armLength;
+      const frontArmY = bodyTopY - 5 * SCALE_FACTOR;
+      // Arm holding the bow
+      ctx.beginPath();
+      ctx.moveTo(x, bodyTopY);
+      ctx.lineTo(frontArmX, frontArmY);
+      ctx.stroke();
+      // Back arm (for a little shape)
+      ctx.beginPath();
+      ctx.moveTo(x, bodyTopY);
+      ctx.lineTo(x + 15 * SCALE_FACTOR, bodyTopY - 10 * SCALE_FACTOR);
+      ctx.stroke();
+
+      // --- Bow ---
+      ctx.save();
+      ctx.translate(frontArmX, frontArmY);
+      ctx.lineWidth = 3 * SCALE_FACTOR;
+      ctx.strokeStyle = "#8B4513"; // Brown
+      ctx.beginPath();
+      // Arc from -90° to +90° to form bow facing left
+      ctx.arc(0, 0, bowRadius, Math.PI / 2, -Math.PI / 2, false);
+      ctx.stroke();
+
+      // Bow string
+      ctx.lineWidth = 1 * SCALE_FACTOR;
+      ctx.strokeStyle = "#A9A9A9"; // Gray
+      ctx.beginPath();
+      ctx.moveTo(0, -bowRadius);
+      ctx.lineTo(0, bowRadius);
+      ctx.stroke();
+
+      ctx.restore(); // Restore after bow
+
+      // --- Draw Enemy Name above head ---
+      ctx.save();
+      ctx.font = `${14 * SCALE_FACTOR}px Arial`;
+      ctx.fillStyle = "black";
+
+      // Measure the text for horizontal centering
+      const textWidth = ctx.measureText(name).width;
+      // Place text above the head
+      const textX = x - textWidth / 2;
+      const textY = headOffsetY - 20 * SCALE_FACTOR; // 10px above head
+
+      ctx.fillText(name, textX, textY);
+      ctx.restore();
+
+      ctx.restore(); // Restore main context
+    },
+    [ctx]
+  );
+  // Removed SCALE_FACTOR dependency
 
   // Draw the entire game scene
   const drawGame = useCallback(() => {
@@ -559,7 +568,7 @@ const ArcheryGame = () => {
 
     // Draw Enemies
     positions.enemies.forEach((enemy) => {
-      drawEnemyArcher(enemy.x, enemy.y,enemy.name);
+      drawEnemyArcher(enemy.x, enemy.y, enemy.name);
     });
 
     // Draw Player Arrow
@@ -641,26 +650,32 @@ const ArcheryGame = () => {
   // Effect 2: Main game loop (Animation, Physics, AI Shooting Trigger)
   useEffect(() => {
     if (!ctx) return; // We need a rendering context
-  
+
     let lastTimestamp = 0;
     let isActive = true; // Flag to stop animation on cleanup
-  
+
     // Main animation/physics loop
     const animate = (timestamp) => {
       if (!isActive || !ctx) return;
-  
+
       const deltaTime = timestamp - lastTimestamp;
       lastTimestamp = timestamp;
-  
+
       if (!roundOver) {
         // --- Enemy Shooting Logic (only if enemies are allowed to fire) ---
         //   e.g., if you have a state [enemyCanFire] that is true after 2s
-        if (deltaTime > 0 && enemyCanFire && enemyAiRef.current.length === NUM_ENEMIES) {
+        if (
+          deltaTime > 0 &&
+          enemyCanFire &&
+          enemyAiRef.current.length === NUM_ENEMIES
+        ) {
           enemyAiRef.current.forEach((aiState, index) => {
             aiState.nextShotDelay -= deltaTime;
             if (aiState.nextShotDelay <= 0) {
               // Check if this enemy already has an arrow in flight
-              const hasArrow = enemyArrows.some(arrow => arrow.enemyIndex === index);
+              const hasArrow = enemyArrows.some(
+                (arrow) => arrow.enemyIndex === index
+              );
               if (!hasArrow && positions.enemies[index]) {
                 fireEnemyArrow(index);
               } else {
@@ -670,35 +685,35 @@ const ArcheryGame = () => {
             }
           });
         }
-  
+
         // --- Physics Updates ---
         const canvas = canvasRef.current;
         const groundY = canvas ? canvas.height - 50 * SCALE_FACTOR : Infinity;
         const outOfBoundsMargin = 50 * SCALE_FACTOR;
-  
+
+        // --- Player Arrow Physics ---
         // --- Player Arrow Physics ---
         if (playerArrow) {
           const newVx = playerArrow.vx;
           const newVy = playerArrow.vy + GRAVITY;
           const newX = playerArrow.x + newVx;
           const newY = playerArrow.y + newVy;
-  
-          // Check if player arrow is out-of-bounds or hits ground
+
+          // Check if player's arrow is out-of-bounds
           if (
             !canvas ||
             newX < -outOfBoundsMargin ||
             newX > canvas.width + outOfBoundsMargin ||
             newY > groundY
           ) {
-            // Remove the arrow
+            // Remove the arrow if it goes out of bounds / hits ground
             setPlayerArrow(null);
           } else {
-            // Check collision with Enemies
+            // Collision check with enemies
             let hitEnemyIndex = -1;
             for (let i = 0; i < positions.enemies.length; i++) {
               const enemy = positions.enemies[i];
-              // Approximate the enemy's center
-              const enemyCenterY = enemy.y - 100 * SCALE_FACTOR; 
+              const enemyCenterY = enemy.y - 100 * SCALE_FACTOR; // approximate head/body
               const dx = newX - enemy.x;
               const dy = newY - enemyCenterY;
               if (Math.sqrt(dx * dx + dy * dy) < ENEMY_HIT_RADIUS) {
@@ -706,55 +721,76 @@ const ArcheryGame = () => {
                 break;
               }
             }
-  
+
             if (hitEnemyIndex !== -1) {
-              // Player hits enemy
-              handleHit("Player", { enemyIndex: hitEnemyIndex });
-              // handleHit typically sets roundOver = true, resets arrows, etc.
+              // We hit an enemy, but we only "win" if that enemy's power=1
+              const enemyId = positions.enemies[hitEnemyIndex].id;
+
+              // If you stored power in the enemy object directly:
+              //   const enemyPower = positions.enemies[hitEnemyIndex].power;
+
+              // If you stored power in enemyAiRef:
+              const enemyPower = enemyAiRef.current[enemyId]?.power;
+
+              if (enemyPower === 1) {
+                // The user arrow hit an enemy that has power=1 -> user wins
+                handleHit("Player", { enemyIndex: hitEnemyIndex });
+              } else {
+                // The enemy had power=0 -> no effect on round outcome
+                // (We still remove the arrow so it doesn't keep flying.)
+              }
+
+              // Remove player arrow after collision
+              setPlayerArrow(null);
             } else {
-              // Update the arrow’s position
-              setPlayerArrow({
-                ...playerArrow,
+              // No collision, just update arrow position
+              setPlayerArrow((prev) => ({
+                ...prev,
                 x: newX,
                 y: newY,
                 vx: newVx,
-                vy: newVy
-              });
+                vy: newVy,
+              }));
             }
           }
         }
-  
+
         // --- Enemy Arrows Physics (with collision power check) ---
         if (enemyArrows.length > 0) {
           const nextEnemyArrows = enemyArrows
-            .map(arrow => {
+            .map((arrow) => {
               const newVx = arrow.vx;
               const newVy = arrow.vy + GRAVITY;
               const newX = arrow.x + newVx;
               const newY = arrow.y + newVy;
-  
+
               // Check collision with Player
               const playerCenterY = positions.player.y - 100 * SCALE_FACTOR;
               const dxPlayer = newX - positions.player.x;
               const dyPlayer = newY - playerCenterY;
-              const distPlayer = Math.sqrt(dxPlayer * dxPlayer + dyPlayer * dyPlayer);
-  
+              const distPlayer = Math.sqrt(
+                dxPlayer * dxPlayer + dyPlayer * dyPlayer
+              );
+
               // Track arrow’s closest distance (for AI learning)
-              const currentMinMiss = Math.min(arrow.minMissDistance, distPlayer);
-  
+              const currentMinMiss = Math.min(
+                arrow.minMissDistance,
+                distPlayer
+              );
+
               // If arrow is within hit radius:
               if (distPlayer < PLAYER_HIT_RADIUS) {
                 // Only trigger an enemy hit if arrow has power=1
                 if (arrow.power === 1) {
                   handleHit("Enemy", {
                     enemyIndex: arrow.enemyIndex,
-                    arrowId: arrow.id
+                    arrowId: arrow.id,
                   });
                 }
                 // Either way, remove the arrow from play
                 return null;
               }
-  
+
               // If arrow is out-of-bounds or hits the ground
               if (
                 !canvas ||
@@ -768,7 +804,7 @@ const ArcheryGame = () => {
                 }
                 return null;
               }
-  
+
               // Otherwise, keep updating arrow position
               return {
                 ...arrow,
@@ -776,11 +812,11 @@ const ArcheryGame = () => {
                 y: newY,
                 vx: newVx,
                 vy: newVy,
-                minMissDistance: currentMinMiss
+                minMissDistance: currentMinMiss,
               };
             })
-            .filter(arrow => arrow !== null);
-  
+            .filter((arrow) => arrow !== null);
+
           // If the new array differs, update state
           if (nextEnemyArrows.length !== enemyArrows.length) {
             setEnemyArrows(nextEnemyArrows);
@@ -800,17 +836,17 @@ const ArcheryGame = () => {
           }
         }
       }
-  
+
       // --- Drawing (always draw current state) ---
       drawGame();
-  
+
       // Request next frame
       requestRef.current = requestAnimationFrame(animate);
     };
-  
+
     // Kick off animation
     requestRef.current = requestAnimationFrame(animate);
-  
+
     // Cleanup on unmount or re-render
     return () => {
       isActive = false;
@@ -823,7 +859,7 @@ const ArcheryGame = () => {
     // Dependencies
     ctx,
     roundOver,
-    enemyCanFire,      // if you have state controlling when enemies can fire
+    enemyCanFire, // if you have state controlling when enemies can fire
     playerArrow,
     enemyArrows,
     positions,
@@ -833,9 +869,8 @@ const ArcheryGame = () => {
     learnFromMiss,
     drawGame,
     fireEnemyArrow,
-    startNewRound
+    startNewRound,
   ]);
-  
 
   // --- Render JSX ---
   return (
