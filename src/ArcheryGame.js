@@ -10,6 +10,9 @@ const ENEMY_HIT_RADIUS = 35 * SCALE_FACTOR; // Scaled hit radius
 const GRAVITY = 0.3 * SCALE_FACTOR; // Apply scale to gravity for visual consistency? (Optional)
 const BASE_ENEMY_SPEED = 15 * Math.sqrt(SCALE_FACTOR); // Adjust speed based on scale
 const enemy_firetime = 2000
+const enemyPower = [0, 0, 0, 1];
+
+
 const ArcheryGame = () => {
   const canvasRef = useRef(null);
   const requestRef = useRef(null);
@@ -44,14 +47,17 @@ const ArcheryGame = () => {
   // --- Utility Functions ---
 
   // Helper to initialize AI state for one enemy
-  const createInitialAiState = (index) => ({
+  const createInitialAiState = (index, power = 1) => ({
     id: index,
     lastAngle: 0,
     lastSpeed: BASE_ENEMY_SPEED,
-    missDistance: 0, // Last shot's miss distance
-    improvementFactor: 0.3 + (Math.random() - 0.5) * 0.1, // Slight variation per enemy
-    nextShotDelay: Math.random() * 1500 + 1000, // Time until next shot allowed (ms) - managed in animate
+    missDistance: 0,
+    improvementFactor: 0.3 + (Math.random() - 0.5) * 0.1,
+    nextShotDelay: Math.random() * 1500 + 1000,
     shotsFired: 0,
+  
+    // NEW:
+    power, // 0 or 1
   });
 
   // --- Memoized Functions ---
@@ -185,9 +191,12 @@ const ArcheryGame = () => {
         y: startY,
         vx: launchSpeed * Math.cos(launchAngleRad),
         vy: launchSpeed * Math.sin(launchAngleRad),
-        id: Date.now() + Math.random(), // Unique ID for the arrow
-        enemyIndex: enemyIndex,
-        minMissDistance: Infinity, // Track closest miss for this specific arrow
+        id: Date.now() + Math.random(),
+        enemyIndex,
+        minMissDistance: Infinity,
+    
+        // NEW: carry over the enemy’s power
+        power: enemyAi.power,
       };
 
       setEnemyArrows((prev) => [...prev, newArrow]); // Add new arrow immutably
@@ -212,9 +221,11 @@ const ArcheryGame = () => {
       setPositions(newPositions);
 
       // Initialize AI
-      enemyAiRef.current = Array.from({ length: NUM_ENEMIES }, (_, i) =>
-        createInitialAiState(i)
-      );
+      enemyAiRef.current = Array.from({ length: NUM_ENEMIES }, (_, i) => {
+        // Example: randomly assign 0 or 1
+        // const randomPower = Math.random() < 0.5 ? 0 : 1;
+        return createInitialAiState(i, enemyPower[i]);
+      });
       console.log("Initialized Enemy AI states:", enemyAiRef.current);
     }
 
@@ -616,160 +627,152 @@ const ArcheryGame = () => {
 
   // Effect 2: Main game loop (Animation, Physics, AI Shooting Trigger)
   useEffect(() => {
-    if (!ctx) return; // Need context
-
+    if (!ctx) return; // We need a rendering context
+  
     let lastTimestamp = 0;
-    let isActive = true; // Prevent updates after cleanup
-
+    let isActive = true; // Flag to stop animation on cleanup
+  
+    // Main animation/physics loop
     const animate = (timestamp) => {
-      if (!isActive || !ctx) return; // Re-check state inside loop
-
+      if (!isActive || !ctx) return;
+  
       const deltaTime = timestamp - lastTimestamp;
       lastTimestamp = timestamp;
-
+  
       if (!roundOver) {
-        // Only update physics and AI if round is active
-
-        // --- Enemy Shooting Logic ---
-        if (
-          deltaTime > 0 &&
-          enemyCanFire &&
-          enemyAiRef.current.length === NUM_ENEMIES
-        ) {
-          // Avoid running on first frame or if AI not ready
+        // --- Enemy Shooting Logic (only if enemies are allowed to fire) ---
+        //   e.g., if you have a state [enemyCanFire] that is true after 2s
+        if (deltaTime > 0 && enemyCanFire && enemyAiRef.current.length === NUM_ENEMIES) {
           enemyAiRef.current.forEach((aiState, index) => {
             aiState.nextShotDelay -= deltaTime;
             if (aiState.nextShotDelay <= 0) {
-              // Check if enemy already has an arrow in flight
-              const hasArrow = enemyArrows.some(
-                (arrow) => arrow.enemyIndex === index
-              );
+              // Check if this enemy already has an arrow in flight
+              const hasArrow = enemyArrows.some(arrow => arrow.enemyIndex === index);
               if (!hasArrow && positions.enemies[index]) {
-                // Check position exists too
-                fireEnemyArrow(index); // Attempt to fire
-                // fireEnemyArrow resets the delay internally
+                fireEnemyArrow(index);
               } else {
-                // If cannot shoot (e.g., arrow exists), reset delay slightly so it tries again soon
-                if (hasArrow) aiState.nextShotDelay = 200; // Try again in 200ms
+                // If we can't fire now, try again soon
+                if (hasArrow) aiState.nextShotDelay = 200;
               }
-              fireEnemyArrow(index);
             }
           });
         }
-
+  
         // --- Physics Updates ---
         const canvas = canvasRef.current;
         const groundY = canvas ? canvas.height - 50 * SCALE_FACTOR : Infinity;
         const outOfBoundsMargin = 50 * SCALE_FACTOR;
-
-        // Player Arrow Physics
+  
+        // --- Player Arrow Physics ---
         if (playerArrow) {
           const newVx = playerArrow.vx;
-          const newVy = playerArrow.vy + GRAVITY; // Use scaled gravity
+          const newVy = playerArrow.vy + GRAVITY;
           const newX = playerArrow.x + newVx;
           const newY = playerArrow.y + newVy;
-
-          // Check bounds or ground hit
+  
+          // Check if player arrow is out-of-bounds or hits ground
           if (
             !canvas ||
             newX < -outOfBoundsMargin ||
             newX > canvas.width + outOfBoundsMargin ||
             newY > groundY
           ) {
-            setPlayerArrow(null); // Arrow out of bounds or hit ground
+            // Remove the arrow
+            setPlayerArrow(null);
           } else {
             // Check collision with Enemies
             let hitEnemyIndex = -1;
             for (let i = 0; i < positions.enemies.length; i++) {
               const enemy = positions.enemies[i];
-              const enemyTargetY = enemy.y - 100 * SCALE_FACTOR; // Aim for body/head center
+              // Approximate the enemy's center
+              const enemyCenterY = enemy.y - 100 * SCALE_FACTOR; 
               const dx = newX - enemy.x;
-              const dy = newY - enemyTargetY;
+              const dy = newY - enemyCenterY;
               if (Math.sqrt(dx * dx + dy * dy) < ENEMY_HIT_RADIUS) {
                 hitEnemyIndex = i;
-                break; // Hit detected
+                break;
               }
             }
-
+  
             if (hitEnemyIndex !== -1) {
+              // Player hits enemy
               handleHit("Player", { enemyIndex: hitEnemyIndex });
-              // handleHit should nullify playerArrow
+              // handleHit typically sets roundOver = true, resets arrows, etc.
             } else {
-              // Update arrow state if no hit and still in bounds
+              // Update the arrow’s position
               setPlayerArrow({
                 ...playerArrow,
                 x: newX,
                 y: newY,
                 vx: newVx,
-                vy: newVy,
+                vy: newVy
               });
             }
           }
         }
-
-        // Enemy Arrows Physics (Update immutably)
+  
+        // --- Enemy Arrows Physics (with collision power check) ---
         if (enemyArrows.length > 0) {
           const nextEnemyArrows = enemyArrows
-            .map((arrow) => {
+            .map(arrow => {
               const newVx = arrow.vx;
-              const newVy = arrow.vy + GRAVITY; // Use scaled gravity
+              const newVy = arrow.vy + GRAVITY;
               const newX = arrow.x + newVx;
               const newY = arrow.y + newVy;
-
+  
               // Check collision with Player
-              const playerTargetY = positions.player.y - 100 * SCALE_FACTOR; // Aim for body/head center
+              const playerCenterY = positions.player.y - 100 * SCALE_FACTOR;
               const dxPlayer = newX - positions.player.x;
-              const dyPlayer = newY - playerTargetY;
-              const distPlayer = Math.sqrt(
-                dxPlayer * dxPlayer + dyPlayer * dyPlayer
-              );
-
-              // Track minimum miss distance for this specific arrow
-              const currentMinMiss = Math.min(
-                arrow.minMissDistance,
-                distPlayer
-              );
-
+              const dyPlayer = newY - playerCenterY;
+              const distPlayer = Math.sqrt(dxPlayer * dxPlayer + dyPlayer * dyPlayer);
+  
+              // Track arrow’s closest distance (for AI learning)
+              const currentMinMiss = Math.min(arrow.minMissDistance, distPlayer);
+  
+              // If arrow is within hit radius:
               if (distPlayer < PLAYER_HIT_RADIUS) {
-                handleHit("Enemy", {
-                  enemyIndex: arrow.enemyIndex,
-                  arrowId: arrow.id,
-                });
-                return null; // Mark arrow for removal
+                // Only trigger an enemy hit if arrow has power=1
+                if (arrow.power === 1) {
+                  handleHit("Enemy", {
+                    enemyIndex: arrow.enemyIndex,
+                    arrowId: arrow.id
+                  });
+                }
+                // Either way, remove the arrow from play
+                return null;
               }
-
-              // Check bounds or ground hit
+  
+              // If arrow is out-of-bounds or hits the ground
               if (
                 !canvas ||
                 newX < -outOfBoundsMargin ||
                 newX > canvas.width + outOfBoundsMargin ||
                 newY > groundY
               ) {
-                // Arrow is out of bounds, trigger learning for the corresponding enemy
+                // Let the enemy learn from its miss
                 if (enemyAiRef.current[arrow.enemyIndex]) {
-                  // Ensure AI state exists
-                  learnFromMiss(arrow.enemyIndex, currentMinMiss); // Learn from the closest point it got
+                  learnFromMiss(arrow.enemyIndex, currentMinMiss);
                 }
-                return null; // Mark arrow for removal
+                return null;
               }
-
-              // Otherwise, update arrow state
+  
+              // Otherwise, keep updating arrow position
               return {
                 ...arrow,
                 x: newX,
                 y: newY,
                 vx: newVx,
                 vy: newVy,
-                minMissDistance: currentMinMiss,
+                minMissDistance: currentMinMiss
               };
             })
-            .filter((arrow) => arrow !== null); // Filter out removed arrows
-
-          // Only update state if the array has actually changed
+            .filter(arrow => arrow !== null);
+  
+          // If the new array differs, update state
           if (nextEnemyArrows.length !== enemyArrows.length) {
             setEnemyArrows(nextEnemyArrows);
           } else {
-            // Check if any arrow position actually changed before setting state (micro-optimization)
+            // Optional optimization check for any position changes
             let changed = false;
             for (let i = 0; i < nextEnemyArrows.length; i++) {
               if (
@@ -783,31 +786,31 @@ const ArcheryGame = () => {
             if (changed) setEnemyArrows(nextEnemyArrows);
           }
         }
-      } // End if (!roundOver)
-
-      // --- Drawing ---
-      drawGame(); // Draw the current state regardless of roundOver
-
-      requestRef.current = requestAnimationFrame(animate); // Request next frame
+      }
+  
+      // --- Drawing (always draw current state) ---
+      drawGame();
+  
+      // Request next frame
+      requestRef.current = requestAnimationFrame(animate);
     };
-
-    // Start the animation loop
-    console.log("Starting animation loop");
+  
+    // Kick off animation
     requestRef.current = requestAnimationFrame(animate);
-
-    // Cleanup function
+  
+    // Cleanup on unmount or re-render
     return () => {
-      console.log("Cleaning up animation loop effect");
       isActive = false;
       if (requestRef.current) {
         cancelAnimationFrame(requestRef.current);
         requestRef.current = null;
       }
     };
-    // Ensure all state variables and callbacks used inside are listed
   }, [
+    // Dependencies
     ctx,
     roundOver,
+    enemyCanFire,      // if you have state controlling when enemies can fire
     playerArrow,
     enemyArrows,
     positions,
@@ -816,9 +819,10 @@ const ArcheryGame = () => {
     handleHit,
     learnFromMiss,
     drawGame,
-    fireEnemyArrow, // Added fireEnemyArrow
-    startNewRound, // Added startNewRound (used in handleHit)
+    fireEnemyArrow,
+    startNewRound
   ]);
+  
 
   // --- Render JSX ---
   return (
