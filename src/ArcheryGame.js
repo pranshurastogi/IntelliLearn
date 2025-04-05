@@ -59,44 +59,74 @@ const ArcheryGame = () => {
   const generateRandomPositions = useCallback((canvas) => {
     if (!canvas) return { player: { x: 0, y: 0 }, enemies: [] };
 
-    const playerX = Math.random() * (canvas.width * 0.15) + canvas.width * 0.05;
-    const minY = canvas.height - 200 * SCALE_FACTOR; // Adjust ground level placement
+    const minY = canvas.height - 200 * SCALE_FACTOR; // Base ground level calculation remains
     const maxY = canvas.height - 50 * SCALE_FACTOR;
-    const playerY = Math.random() * (maxY - minY) + minY;
 
+    // 1. Place the Player first
+    const playerMinX = canvas.width * 0.05;
+    const playerMaxX = canvas.width * 0.15; // Keep player somewhat left
+    const playerX = Math.random() * (playerMaxX - playerMinX) + playerMinX;
+    const playerY = Math.random() * (maxY - minY) + minY;
+    const playerPos = { x: playerX, y: playerY };
+
+    // 2. Place Enemies, avoiding player and other enemies
     const enemies = [];
-    const enemyAreaStartX = canvas.width * 0.6;
-    const enemyAreaEndX = canvas.width * 0.95;
+    const enemyPlacementAttempts = 100; // Max attempts per enemy to find a spot
+    const safeZoneFromPlayer = MIN_ENEMY_DISTANCE * 1.5; // Ensure enemies aren't right on top of player
+
+    // Define wider bounds for enemy X placement
+    const enemyMinX = playerMaxX + 50 * SCALE_FACTOR; // Start enemies clearly to the right of player's zone
+    const enemyMaxX = canvas.width - 50 * SCALE_FACTOR; // Leave margin on the right edge
 
     for (let i = 0; i < NUM_ENEMIES; i++) {
-      let enemyX, enemyY, tooClose;
+      let enemyX, enemyY, validPosition = false;
       let attempts = 0;
-      do {
-        tooClose = false;
-        enemyX = Math.random() * (enemyAreaEndX - enemyAreaStartX) + enemyAreaStartX;
-        enemyY = Math.random() * (maxY - minY) + minY;
 
-        // Check distance against already placed enemies
+      while (!validPosition && attempts < enemyPlacementAttempts) {
+        attempts++;
+        // Generate a candidate position anywhere within the wider allowed range
+        enemyX = Math.random() * (enemyMaxX - enemyMinX) + enemyMinX;
+        enemyY = Math.random() * (maxY - minY) + minY; // Use same height variation as player
+
+        // Check 1: Distance from Player
+        const dxPlayer = enemyX - playerPos.x;
+        const dyPlayer = enemyY - playerPos.y; // Check Y distance too, in case player is high/low
+        if (Math.sqrt(dxPlayer * dxPlayer + dyPlayer * dyPlayer) < safeZoneFromPlayer) {
+          continue; // Too close to player, try new random position
+        }
+
+        // Check 2: Distance from other already placed Enemies
+        let tooCloseToOtherEnemy = false;
         for (let j = 0; j < enemies.length; j++) {
-          const dx = enemyX - enemies[j].x;
-          const dy = enemyY - enemies[j].y;
-          if (Math.sqrt(dx * dx + dy * dy) < MIN_ENEMY_DISTANCE) {
-            tooClose = true;
-            break;
+          const dxEnemy = enemyX - enemies[j].x;
+          const dyEnemy = enemyY - enemies[j].y;
+          if (Math.sqrt(dxEnemy * dxEnemy + dyEnemy * dyEnemy) < MIN_ENEMY_DISTANCE) {
+            tooCloseToOtherEnemy = true;
+            break; // Too close to another enemy, try new random position
           }
         }
-        attempts++;
-        if (attempts > 50) {
-            console.warn(`Could not place enemy ${i} without overlap after 50 attempts. Placing anyway.`);
-            break; // Prevent infinite loop
+
+        if (!tooCloseToOtherEnemy) {
+          validPosition = true; // Found a good spot!
         }
-      } while (tooClose);
+      } // End while seeking valid position
 
-      enemies.push({ x: enemyX, y: enemyY, id: i });
-    }
+      if (validPosition) {
+        enemies.push({ x: enemyX, y: enemyY, id: i });
+      } else {
+        // Fallback: Could not find a valid non-overlapping position after many attempts.
+        // This might happen if NUM_ENEMIES is too high for the canvas size / MIN_ENEMY_DISTANCE.
+        // Option 1: Place it anyway (might overlap) - Simplest for now.
+        // Option 2: Skip this enemy (reduce NUM_ENEMIES for this round).
+        // Option 3: Throw an error or log a more severe warning.
+        console.warn(`Could not place enemy ${i} without overlap after ${enemyPlacementAttempts} attempts. Placing at last attempted position.`);
+        // Place it at the last (potentially overlapping) position
+        enemies.push({ x: enemyX, y: enemyY, id: i });
+      }
+    } // End for each enemy
 
-    return { player: { x: playerX, y: playerY }, enemies };
-  }, []); // Removed SCALE_FACTOR dependency as it's constant here
+    return { player: playerPos, enemies };
+  }, []); // SCALE_FACTOR and NUM_ENEMIES are constants, MIN_ENEMY_DISTANCE is constant
 
 
   // Fire an enemy arrow for a specific enemy
