@@ -13,6 +13,7 @@ const enemy_firetime = 2000;
 const enemyPower = [0, 0, 0, 1]; // Omega has power
 const enemyNames = ["Alpha", "Beta", "Gamma", "Omega"];
 
+
 // --- Theme Colors (Consolidated) ---
 const THEME_COLORS = {
   BACKGROUND: "#383838", LAVA: "#ff4757", LAVA_SPARK: "rgba(255, 220, 100, 0.9)",
@@ -604,6 +605,65 @@ const ArcheryGame = () => {
 );
 
 
+
+  // --- NEW: Calculate Trajectory Points ---
+  const calculateTrajectoryPoints = useCallback((startX, startY, initialVx, initialVy, steps = 5, timeStep = 2) => {
+    const points = [];
+    let currentX = startX;
+    let currentY = startY;
+    let currentVx = initialVx;
+    let currentVy = initialVy;
+    const canvas = canvasRef.current;
+    const lavaLevel = canvas ? canvas.height - 30 * SCALE_FACTOR : Infinity; // Get lava level
+
+    for (let i = 0; i < steps; i++) {
+        // Apply gravity over the timeStep
+        currentVy += GRAVITY * timeStep;
+        // Update position based on velocity over the timeStep
+        currentX += currentVx * timeStep;
+        currentY += currentVy * timeStep;
+
+        // Stop if it hits the ground/lava or goes way off screen
+        if (currentY > lavaLevel || currentX < -50 || currentX > (canvas?.width ?? Infinity) + 50) {
+            break;
+        }
+
+        points.push({ x: currentX, y: currentY });
+    }
+    return points;
+}, [GRAVITY, SCALE_FACTOR]); // Add dependencies GRAVITY, SCALE_FACTOR
+
+// --- NEW: Draw Trajectory Preview ---
+const drawTrajectoryPreview = useCallback((points) => {
+    if (!ctx || points.length === 0) return;
+
+    ctx.save();
+    ctx.fillStyle = "rgba(255, 255, 255, 0.3)"; // Faint white dots
+    // Or use dashed lines:
+    // ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+    // ctx.lineWidth = 1;
+    // ctx.setLineDash([3, 5]); // Short dashes with gaps
+    // ctx.beginPath();
+    // ctx.moveTo(points[0].x, points[0].y);
+
+    points.forEach((point, index) => {
+        // Draw dots
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 1.5 * SCALE_FACTOR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Or draw lines
+        // if (index > 0) {
+        //    ctx.lineTo(point.x, point.y);
+        // }
+    });
+
+    // ctx.stroke(); // For dashed line
+    // ctx.setLineDash([]); // Reset line dash
+    ctx.restore();
+}, [ctx, SCALE_FACTOR]); // Add ctx dependency
+
+
   // Draw the main game scene (when gameState === 'playing')
   const drawGameScene = useCallback(() => {
     if (!ctx || !canvasRef.current) return;
@@ -617,8 +677,8 @@ const ArcheryGame = () => {
     ctx.fillStyle = THEME_COLORS.MOON; ctx.beginPath(); ctx.arc(moonX, moonY, moonRadius, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = THEME_COLORS.MOON_CRATER;
     for (let i = 0; i < 5; i++) {
-        const craterR = Math.random() * moonRadius * 0.2 + moonRadius * 0.05; const angle = Math.random() * Math.PI * 2;
-        const dist = Math.random() * (moonRadius - craterR * 0.8); const craterX = moonX + Math.cos(angle) * dist; const craterY = moonY + Math.sin(angle) * dist;
+        const craterR = Math.random() * moonRadius * 0.2 + moonRadius * 0.05; const angle_ = Math.random() * Math.PI * 2; // Renamed angle to angle_
+        const dist = Math.random() * (moonRadius - craterR * 0.8); const craterX = moonX + Math.cos(angle_) * dist; const craterY = moonY + Math.sin(angle_) * dist; // Use angle_
         ctx.beginPath(); ctx.arc(craterX, craterY, craterR, 0, Math.PI * 2); ctx.fill();
     }
     const mountainStartY = ch * 0.55; ctx.fillStyle = THEME_COLORS.MOUNTAIN; ctx.beginPath(); ctx.moveTo(0, mountainStartY);
@@ -632,6 +692,7 @@ const ArcheryGame = () => {
         ctx.beginPath(); ctx.arc(Math.random() * cw, ch - Math.random() * lavaHeight * 0.9, Math.random() * 2.5 + 1, 0, Math.PI * 2); ctx.fill();
     }
 
+
     // 5. Platforms & Health Bars (same as before)
     const healthBarThickness = 4 * SCALE_FACTOR;
     if (positions.player.x > 0) {
@@ -644,6 +705,30 @@ const ArcheryGame = () => {
         ctx.fillStyle = THEME_COLORS.PLATFORM; ctx.fillRect(platformX, platformY, PLATFORM_WIDTH, PLATFORM_HEIGHT);
         ctx.fillStyle = THEME_COLORS.ENEMY_HEALTH_BAR; ctx.fillRect(platformX, platformY, PLATFORM_WIDTH, healthBarThickness);
     });
+
+    if (gameState === 'playing' && !playerArrow && positions.player.x > 0) {
+      // Calculate initial conditions (MUST match firePlayerArrow)
+      const angleRad = (-angle * Math.PI) / 180;
+      const armLength = 20 * SCALE_FACTOR;
+      const bodyTopOffsetY = -60 * SCALE_FACTOR + 5 * SCALE_FACTOR;
+      const shoulderY = positions.player.y + bodyTopOffsetY;
+      const handX = positions.player.x + armLength * Math.cos(angleRad);
+      const handY = shoulderY + armLength * Math.sin(angleRad);
+      const bowRadius = 18 * SCALE_FACTOR;
+      const arrowStartX = handX - bowRadius * 0.5 * Math.cos(angleRad);
+      const arrowStartY = handY - bowRadius * 0.5 * Math.sin(angleRad);
+      const baseSpeed = 9 * Math.sqrt(SCALE_FACTOR);
+      const powerMultiplier = 18 * Math.sqrt(SCALE_FACTOR);
+      const speed = baseSpeed + (power / 100) * powerMultiplier;
+      const initialVx = speed * Math.cos(angleRad);
+      const initialVy = speed * Math.sin(angleRad);
+
+      // Calculate points
+      const trajectoryPoints = calculateTrajectoryPoints(arrowStartX, arrowStartY, initialVx, initialVy);
+
+      // Draw the preview
+      drawTrajectoryPreview(trajectoryPoints);
+  }
 
     // 6. Draw Characters
     if (positions.player.x > 0) {
@@ -665,7 +750,7 @@ const ArcheryGame = () => {
       drawArrow(arrow.x, arrow.y, currentAngle);
     });
 
-  }, [ ctx, positions, angle, power, playerArrow, enemyArrows, drawPlayerArcher, drawEnemyArcher, drawArrow, PLATFORM_WIDTH, PLATFORM_HEIGHT]);
+  }, [ ctx, positions, angle, power, playerArrow, enemyArrows, drawPlayerArcher, drawEnemyArcher, drawArrow, PLATFORM_WIDTH, PLATFORM_HEIGHT,gameState,calculateTrajectoryPoints, drawTrajectoryPreview,THEME_COLORS, SCALE_FACTOR]);
 
   // Fire the player's arrow
   const firePlayerArrow = useCallback(() => {
