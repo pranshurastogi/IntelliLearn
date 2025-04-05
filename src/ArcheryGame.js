@@ -1100,40 +1100,78 @@ const drawTrajectoryPreview = useCallback((points) => {
         // Style is handled by CSS or drawing now
       />
 
-      {/* Controls Area - Only visible when playing */}
-      <div className="controls-area">
+          {/* Controls Area - Only visible when playing */}
+          <div className="controls-area">
         {gameState === 'playing' && positions.player.x !== 0 && (
           <div className="bottom-controls">
-            <div className="slider-group">
-              <label>Angle:</label>
-              <input
-                type="range" min="0" max="90" value={angle}
-                onChange={(e) => setAngle(parseInt(e.target.value))}
-                disabled={!!playerArrow} // Only disable if player arrow exists
-              />
-              <span>{angle}°</span>
+
+            {/* Angle Control Group */}
+            <div className="control-set angle-control">
+              <label htmlFor="angle-slider">Angle</label>
+              <div className="slider-container">
+                 <button
+                   className="fine-tune-button minus-button"
+                   onClick={() => setAngle(a => Math.max(0, a - 1))} // Decrement angle, min 0
+                   disabled={!!playerArrow}
+                   aria-label="Decrease Angle"
+                 >-</button>
+                 <input
+                    id="angle-slider"
+                    type="range" min="0" max="90" value={angle}
+                    onChange={(e) => setAngle(parseInt(e.target.value))}
+                    disabled={!!playerArrow}
+                    className="control-slider"
+                 />
+                 <button
+                    className="fine-tune-button plus-button"
+                    onClick={() => setAngle(a => Math.min(90, a + 1))} // Increment angle, max 90
+                    disabled={!!playerArrow}
+                    aria-label="Increase Angle"
+                 >+</button>
+              </div>
+              <span className="value-display">{angle}°</span>
             </div>
-            <div className="slider-group">
-              <label>Power:</label>
-              <input
-                type="range" min="10" max="100" value={power}
-                onChange={(e) => setPower(parseInt(e.target.value))}
-                disabled={!!playerArrow}
-              />
-              <span>{power}</span>
+
+            {/* Power Control Group */}
+            <div className="control-set power-control">
+               <label htmlFor="power-slider">Power</label>
+               <div className="slider-container">
+                 <button
+                   className="fine-tune-button minus-button"
+                   onClick={() => setPower(p => Math.max(10, p - 1))} // Decrement power, min 10
+                   disabled={!!playerArrow}
+                   aria-label="Decrease Power"
+                 >-</button>
+                 <input
+                    id="power-slider"
+                    type="range" min="10" max="100" value={power}
+                    onChange={(e) => setPower(parseInt(e.target.value))}
+                    disabled={!!playerArrow}
+                    className="control-slider"
+                 />
+                  <button
+                    className="fine-tune-button plus-button"
+                    onClick={() => setPower(p => Math.min(100, p + 1))} // Increment power, max 100
+                    disabled={!!playerArrow}
+                    aria-label="Increase Power"
+                  >+</button>
+               </div>
+               <span className="value-display">{power}</span>
             </div>
+
+            {/* Fire Button */}
             <button
               className="fire-button"
               onClick={firePlayerArrow}
               disabled={!!playerArrow}
             >
-              Fire!
+              FIRE! {/* Maybe make text more impactful */}
             </button>
+
           </div>
         )}
          {/* Display messages based on state if needed outside canvas */}
          {gameState === 'loading' && <div className="loading-message">Loading Game...</div>}
-         {/* Removed round over message, handled by explanation screen */}
       </div>
     </div>
   );
