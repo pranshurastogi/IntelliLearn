@@ -11,7 +11,7 @@ const GRAVITY = 0.25 * SCALE_FACTOR;
 const BASE_ENEMY_SPEED = 14 * Math.sqrt(SCALE_FACTOR);
 const enemy_firetime = 2000;
 const enemyPower = [0, 0, 0, 1]; // Omega has power
-const enemyNames = ["Alpha", "Beta", "Gamma", "Omega"];
+const enemyNames = ["A", "B", "C", "D"];
 
 
 // --- Theme Colors (Consolidated) ---
@@ -60,12 +60,12 @@ const THEME_COLORS = {
 // --- Assessment Data (Example) ---
 const assessmentData = [
     {
-        "question": "What is the primary color of the lava in this game?",
-        "options": ["Blue", "Green", "Red/Orange", "Yellow"],
+        "question": "What typically happens if you lose access to your blockchain wallet?",
+        "options": ["You can contact customer support to reset your wallet.", "You can retrieve your wallet using your email and password.", "You permanently lose access to your funds and cannot recover them.", "Your wallet will automatically reset after 30 days."],
         "Correct_option_index": 2,
         "difficulty": 1,
-        "category": "Observation",
-        "explanation": "The lava floor at the bottom of the screen is depicted in shades of red and orange, consistent with typical representations of molten rock.",
+        "category": "Basics",
+        "explanation": "Blockchain wallets are decentralized, meaning there's no central authority (like a bank or company) that can recover or reset your access. If you lose your private key or recovery phrase (also called a seed phrase), there's no way to access your wallet or the funds stored in it.",
         "round": 1
     },
     {
