@@ -1,0 +1,120 @@
+/* src/sections/VisionFutureScope/VisionFutureScope.module.css */
+.visionSection {
+    background-color: var(--light-background);
+    padding: var(--section-padding);
+  }
+  
+  .sectionTitle {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+  }
+  
+  .visionStatement {
+    font-size: 1.15rem;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 3.5rem auto; /* Increased bottom margin */
+    color: var(--text-dark);
+    font-weight: 400;
+    line-height: 1.7;
+  }
+  
+  /* The main grid for the cards */
+  .visionGrid {
+    display: grid;
+    /* Define 3 columns for desktop */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px; /* Gap between cards */
+  }
+  
+  /* Individual card styling */
+  .visionCard {
+    background-color: #ffffff;
+    padding: 30px; /* Good padding inside card */
+    border-radius: var(--border-radius);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08); /* Slightly more pronounced shadow */
+    display: flex; /* Use flex to align icon and text */
+    align-items: flex-start; /* Align items to the top */
+    gap: 20px; /* Space between icon wrapper and text content */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .visionCard:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Wrapper for the icon (optional but helps control spacing/size) */
+  .iconWrapper {
+      flex-shrink: 0; /* Prevent icon from shrinking */
+      /* background-color: rgba(255, 111, 0, 0.1); Optional subtle background */
+      /* padding: 10px; Optional padding */
+      /* border-radius: 50%; Optional circular background */
+  }
+  
+  /* Icon styling */
+  .icon {
+    font-size: 2.2rem; /* Icon size */
+    color: var(--secondary-color); /* Orange icon */
+    margin-top: 3px; /* Fine-tune vertical alignment */
+  }
+  
+  /* Container for the text (title + paragraph) */
+  .textContent {
+    flex-grow: 1; /* Allow text content to take remaining space */
+  }
+  
+  .textContent h4 {
+    color: var(--primary-color); /* Dark blue title */
+    margin-bottom: 0.6rem;
+    font-size: 1.2rem; /* Slightly larger title */
+    font-weight: 700; /* Bolder title */
+    line-height: 1.4;
+  }
+  
+  .textContent p {
+    color: var(--text-dark);
+    font-size: 0.95rem; /* Standard paragraph size */
+    line-height: 1.6;
+  }
+  
+  /* Optional: Placeholder style if you uncomment the 6th item */
+  .placeholder {
+      background-color: transparent;
+      box-shadow: none;
+      border: 1px dashed #ccc; /* Indicate empty slot */
+  }
+  
+  
+  /* Responsive adjustments */
+  @media (max-width: 992px) { /* Tablet breakpoint */
+    .visionGrid {
+      /* Switch to 2 columns */
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 576px) { /* Mobile breakpoint */
+    .visionGrid {
+      /* Switch to 1 column */
+      grid-template-columns: 1fr;
+    }
+     .visionStatement {
+          font-size: 1.05rem;
+          margin-bottom: 2.5rem;
+     }
+     .visionCard {
+         padding: 25px;
+         gap: 15px;
+     }
+     .textContent h4 {
+         font-size: 1.1rem;
+     }
+     .textContent p {
+         font-size: 0.9rem;
+     }
+     .icon {
+         font-size: 2rem;
+     }
+  }

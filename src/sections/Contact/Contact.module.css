@@ -1,0 +1,125 @@
+/* src/sections/Contact/Contact.module.css */
+.contactSection {
+    background-color: var(--light-background);
+  }
+  
+  .sectionTitle {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+  }
+  
+  .sectionSubtitle {
+    text-align: center;
+    color: var(--text-dark);
+    max-width: 600px;
+    margin: 0 auto 3rem auto;
+    font-size: 1.1rem;
+  }
+  
+  .contactFormWrapper {
+    max-width: 800px; /* Limit form width */
+    margin: 0 auto;
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .contactForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* Space between form groups/rows */
+  }
+  
+  .formRow {
+    display: flex;
+    gap: 1.5rem; /* Space between inputs in a row */
+  }
+  
+  .formGroup {
+    flex: 1; /* Make groups take equal space in a row */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .formGroup label {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+  }
+  
+  .formGroup input,
+  .formGroup textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+  }
+  
+  .formGroup input:focus,
+  .formGroup textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(26, 35, 126, 0.2); /* Focus ring */
+  }
+  
+  .formGroup textarea {
+    resize: vertical; /* Allow vertical resize */
+  }
+  
+  .submitButtonWrapper {
+      text-align: center; /* Center the submit button */
+      margin-top: 1rem;
+  }
+  
+  /* Re-use submit class from Button.module.css if needed or define here */
+  .submitButton {
+    /* Inherits from Button component */
+    background-color: var(--primary-color); /* Explicitly style if needed */
+  }
+  .submitButton:hover {
+     background-color: #10175a; /* Darker primary */
+  }
+  
+  .successMessage {
+      text-align: center;
+      color: green;
+      font-weight: bold;
+      padding: 20px;
+      border: 1px solid green;
+      border-radius: var(--border-radius);
+      background-color: #e8f5e9;
+  }
+  
+  .directContact {
+      text-align: center;
+      margin-top: 2.5rem;
+      color: var(--text-dark);
+  }
+  .directContact p {
+      margin-bottom: 0.5rem;
+  }
+  .directContact a {
+      color: var(--primary-color);
+      font-weight: 600;
+  }
+  .directContact a:hover {
+      color: var(--secondary-color);
+  }
+  
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .formRow {
+      flex-direction: column; /* Stack inputs in a row on smaller screens */
+      gap: 1.5rem; /* Keep gap consistent */
+    }
+    .contactFormWrapper {
+      padding: 30px;
+    }
+  }

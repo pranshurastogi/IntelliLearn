@@ -1,0 +1,119 @@
+/* src/sections/Hero/Hero.module.css */
+.heroSection {
+    position: relative; /* Needed for overlay */
+    /* Example Gradient Background */
+    background: linear-gradient(135deg, var(--primary-color), #2c3e50); /* Indigo to a softer dark blue/gray */
+    color: var(--text-light);
+    padding: 150px 20px 100px; /* More top padding for fixed navbar */
+    min-height: 85vh; /* Make it taller */
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center content */
+    text-align: center;
+    overflow: hidden; /* Hide potential overflow from animations */
+  }
+  
+  /* Optional Overlay */
+  .heroSection::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4); /* Dark overlay for better text contrast */
+      z-index: 1;
+  }
+  
+  /* Container needs higher z-index to be above overlay */
+  .heroContainer {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .headline {
+    font-size: 3.2rem; /* Larger headline */
+    font-weight: 700;
+    max-width: 850px;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3); /* Subtle text shadow */
+  }
+  
+  .subHeadline {
+    font-size: 1.25rem;
+    max-width: 700px;
+    margin-bottom: 2.5rem;
+    color: rgba(255, 255, 255, 0.9); /* Brighter muted color */
+  }
+  
+  .ctaButtons {
+      display: flex;
+      gap: 1rem; /* Spacing between buttons */
+      justify-content: center;
+      flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+  }
+  
+  /* Styles to make react-scroll Links look like buttons */
+  /* Inherit base button styles */
+  .buttonLink {
+    padding: 12px 30px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    display: inline-block;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.5;
+  }
+  
+  /* Apply primary styles */
+  .buttonLink.primary {
+    background-color: var(--secondary-color);
+    color: var(--text-light);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  .buttonLink.primary:hover {
+    background-color: #e65100;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Apply secondary styles */
+  .buttonLink.secondary {
+    background-color: transparent;
+    color: var(--secondary-color); /* Make text orange */
+    border: 2px solid var(--secondary-color);
+  }
+  .buttonLink.secondary:hover {
+    background-color: rgba(255, 111, 0, 0.1);
+     color: var(--secondary-color); /* Keep text orange */
+    transform: translateY(-2px);
+  }
+  
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .heroSection {
+      padding: 120px 20px 80px;
+      min-height: 70vh;
+    }
+    .headline {
+      font-size: 2.5rem;
+    }
+    .subHeadline {
+      font-size: 1.1rem;
+    }
+     .ctaButtons {
+      flex-direction: column; /* Stack buttons vertically */
+      align-items: center; /* Center stacked buttons */
+    }
+  }

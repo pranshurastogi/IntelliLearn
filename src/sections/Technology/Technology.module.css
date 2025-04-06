@@ -1,0 +1,56 @@
+/* src/sections/Technology/Technology.module.css */
+.technologySection {
+    /* Dark background applied via .dark-section */
+    text-align: center;
+  }
+  
+  .sectionTitle {
+    color: var(--text-light);
+    margin-bottom: 1rem;
+  }
+  
+  .sectionSubtitle {
+      color: var(--text-muted-dark-bg);
+      max-width: 600px;
+      margin: 0 auto 3rem auto; /* Center subtitle */
+      font-size: 1.1rem;
+  }
+  
+  .techGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    max-width: 1000px; /* Limit grid width */
+    margin: 0 auto; /* Center grid */
+  }
+  
+  .techItem {
+    padding: 20px;
+  }
+  
+  .techIcon {
+    font-size: 3.5rem; /* Larger icons */
+    color: var(--accent-color); /* Accent color for tech icons */
+    margin-bottom: 1.5rem;
+  }
+  
+  .techItem h3 {
+    color: var(--text-light);
+    margin-bottom: 0.8rem;
+    font-size: 1.4rem;
+  }
+  
+  .techItem p {
+    color: var(--text-muted-dark-bg);
+    font-size: 0.95rem;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 576px) {
+      .techIcon {
+          font-size: 3rem;
+      }
+       .techItem h3 {
+          font-size: 1.2rem;
+       }
+  }

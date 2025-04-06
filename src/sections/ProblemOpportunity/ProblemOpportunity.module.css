@@ -1,0 +1,55 @@
+/* src/sections/ProblemOpportunity/ProblemOpportunity.module.css */
+.problemOpportunitySection {
+    background-color: var(--light-background);
+  }
+  
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two equal columns */
+    gap: 50px; /* Space between columns */
+    align-items: start; /* Align items to the top */
+  }
+  
+  .column {
+    text-align: center; /* Center text within columns */
+    padding: 20px;
+  }
+  
+  .column h3 {
+    color: var(--primary-color); /* Use primary color for headings */
+    margin-bottom: 1rem;
+    margin-top: 0.5rem; /* Space below icon */
+  }
+  
+  .column p {
+    color: var(--text-dark);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem; /* Space below paragraph */
+  }
+  
+  .iconWrapper {
+      margin-bottom: 1rem;
+      color: var(--primary-color); /* Default icon color */
+  }
+  
+  /* Specific styling for the solution column */
+  .solutionColumn h3 {
+    color: var(--secondary-color); /* Use secondary color for solution headings */
+  }
+  
+  .solutionColumn .iconWrapper {
+      color: var(--secondary-color); /* Make icons orange too */
+  }
+  
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .container {
+      grid-template-columns: 1fr; /* Stack columns on smaller screens */
+      gap: 40px;
+    }
+    .column {
+        padding: 0; /* Remove padding when stacked */
+    }
+  }
