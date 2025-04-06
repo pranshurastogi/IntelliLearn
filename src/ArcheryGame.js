@@ -16,13 +16,45 @@ const enemyNames = ["Alpha", "Beta", "Gamma", "Omega"];
 
 // --- Theme Colors (Consolidated) ---
 const THEME_COLORS = {
-  BACKGROUND: "#383838", LAVA: "#ff4757", LAVA_SPARK: "rgba(255, 220, 100, 0.9)",
-  MOUNTAIN: "#2a2a2a", MOON: "#d5d5d5", MOON_CRATER: "rgba(255, 255, 255, 0.18)",
-  PLATFORM: "#181818", PLAYER_HEALTH_BAR: "#0090ff", ENEMY_HEALTH_BAR: "#888888",
-  TEXT: "#ffffff", QUESTION_BG: "rgba(0, 0, 0, 0.7)", BUTTON: "#007bff", BUTTON_TEXT: "#ffffff",
-  PLAYER_SILHOUETTE: "#5a3d2b", NOCKED_ARROW_SHAFT: "#a4785f", NOCKED_ARROW_HEAD: "#666666",
-  ENEMY: "black", ENEMY_ACCENT: "#ff6b6b", BOW: "#c87d33",
-  BOW_STRING: "#dddddd", ARROW: "#f5f5f5", ARROW_HEAD: "#b0b0b0",
+  // Sky Gradient (Replaces BACKGROUND) - Define these in drawGameScene
+  SKY_TOP: "#2c3e50", // Deep Blue/Purple
+  SKY_HORIZON: "#fd7e14", // Orange
+  SKY_BOTTOM: "#e85a4f", // Muted Red/Pink near horizon
+
+  // Ground (Replaces LAVA)
+  GROUND: "#5a4d41", // Darker, earthy brown/grey
+  GROUND_SHADOW: "#3e352f", // Even darker shade for depth
+
+  // Elements
+  MOUNTAIN: "#34495e", // Darker, bluer silhouette
+  MOON: "#f1c40f",     // Softer, yellower moon (or setting sun color)
+  MOON_CRATER: "rgba(255, 255, 255, 0.1)", // Keep subtle or reduce opacity
+
+  PLATFORM: "#282828", // Keep platforms dark for contrast
+  PLAYER_HEALTH_BAR: "#0090ff", // Keep health bars vibrant
+  ENEMY_HEALTH_BAR: "#a0a0a0", // Slightly lighter grey enemy health?
+
+  // UI & Text
+  TEXT: "#ffffff",
+  QUESTION_BG: "rgba(10, 10, 20, 0.8)", // Darker, slightly blue-tinted background
+  BUTTON: "#fd7e14", // Use horizon orange for buttons
+  BUTTON_TEXT: "#ffffff",
+
+  // Characters & Items (adjust slightly if needed)
+  PLAYER_SILHOUETTE: "#4a3123", // Slightly darker brown silhouette
+  NOCKED_ARROW_SHAFT: "#a4785f",
+  NOCKED_ARROW_HEAD: "#777777", // Slightly darker head
+
+  ENEMY: "black", // Keep black silhouette
+  ENEMY_ACCENT: "#f39c12", // Muted orange accent instead of bright red
+  BOW: "black", // Slightly darker wood tone
+
+  BOW_STRING: "#dddddd",
+  ARROW: "#f5f5f5", // Keep arrows bright for visibility
+  ARROW_HEAD: "#b0b0b0",
+
+  // Trajectory Preview (Adjusted for better visibility)
+  TRAJECTORY_DOT: "rgba(255, 255, 200, 0.5)", // Faint yellow dots
 };
 
 // --- Assessment Data (Example) ---
@@ -635,122 +667,180 @@ const ArcheryGame = () => {
 
 // --- NEW: Draw Trajectory Preview ---
 const drawTrajectoryPreview = useCallback((points) => {
-    if (!ctx || points.length === 0) return;
+  if (!ctx || points.length === 0) return;
 
-    ctx.save();
-    ctx.fillStyle = "rgba(255, 255, 255, 0.3)"; // Faint white dots
-    // Or use dashed lines:
-    // ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
-    // ctx.lineWidth = 1;
-    // ctx.setLineDash([3, 5]); // Short dashes with gaps
-    // ctx.beginPath();
-    // ctx.moveTo(points[0].x, points[0].y);
+  ctx.save();
+  ctx.fillStyle = THEME_COLORS.TRAJECTORY_DOT; // Use the new theme color
 
-    points.forEach((point, index) => {
-        // Draw dots
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, 1.5 * SCALE_FACTOR, 0, Math.PI * 2);
-        ctx.fill();
+  points.forEach((point) => {
+      // Draw dots
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 1.5 * SCALE_FACTOR, 0, Math.PI * 2);
+      ctx.fill();
+  });
 
-        // Or draw lines
-        // if (index > 0) {
-        //    ctx.lineTo(point.x, point.y);
-        // }
-    });
-
-    // ctx.stroke(); // For dashed line
-    // ctx.setLineDash([]); // Reset line dash
-    ctx.restore();
-}, [ctx, SCALE_FACTOR]); // Add ctx dependency
+  ctx.restore();
+}, [ctx, SCALE_FACTOR]);
 
 
   // Draw the main game scene (when gameState === 'playing')
-  const drawGameScene = useCallback(() => {
-    if (!ctx || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const cw = canvas.width;
-    const ch = canvas.height;
-
-    // 1. Background, Moon, Mountains, Lava (same as before)
-    ctx.fillStyle = THEME_COLORS.BACKGROUND; ctx.fillRect(0, 0, cw, ch);
-    const moonRadius = Math.min(cw, ch) * 0.2; const moonX = cw * 0.75; const moonY = ch * 0.2;
-    ctx.fillStyle = THEME_COLORS.MOON; ctx.beginPath(); ctx.arc(moonX, moonY, moonRadius, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = THEME_COLORS.MOON_CRATER;
-    for (let i = 0; i < 5; i++) {
-        const craterR = Math.random() * moonRadius * 0.2 + moonRadius * 0.05; const angle_ = Math.random() * Math.PI * 2; // Renamed angle to angle_
-        const dist = Math.random() * (moonRadius - craterR * 0.8); const craterX = moonX + Math.cos(angle_) * dist; const craterY = moonY + Math.sin(angle_) * dist; // Use angle_
-        ctx.beginPath(); ctx.arc(craterX, craterY, craterR, 0, Math.PI * 2); ctx.fill();
-    }
-    const mountainStartY = ch * 0.55; ctx.fillStyle = THEME_COLORS.MOUNTAIN; ctx.beginPath(); ctx.moveTo(0, mountainStartY);
-    ctx.lineTo(cw * 0.15, mountainStartY + 40 * SCALE_FACTOR); ctx.lineTo(cw * 0.3, mountainStartY - 15 * SCALE_FACTOR);
-    ctx.lineTo(cw * 0.5, mountainStartY + 60 * SCALE_FACTOR); ctx.lineTo(cw * 0.7, mountainStartY - 25 * SCALE_FACTOR);
-    ctx.lineTo(cw * 0.85, mountainStartY + 35 * SCALE_FACTOR); ctx.lineTo(cw, mountainStartY - 5 * SCALE_FACTOR);
-    ctx.lineTo(cw, ch); ctx.lineTo(0, ch); ctx.closePath(); ctx.fill();
-    const lavaHeight = 30 * SCALE_FACTOR; ctx.fillStyle = THEME_COLORS.LAVA; ctx.fillRect(0, ch - lavaHeight, cw, lavaHeight);
-    ctx.fillStyle = THEME_COLORS.LAVA_SPARK;
-    for (let i = 0; i < 25; i++) {
-        ctx.beginPath(); ctx.arc(Math.random() * cw, ch - Math.random() * lavaHeight * 0.9, Math.random() * 2.5 + 1, 0, Math.PI * 2); ctx.fill();
-    }
-
-
-    // 5. Platforms & Health Bars (same as before)
-    const healthBarThickness = 4 * SCALE_FACTOR;
-    if (positions.player.x > 0) {
-        const platformX = positions.player.x - PLATFORM_WIDTH / 2; const platformY = positions.player.platformY;
-        ctx.fillStyle = THEME_COLORS.PLATFORM; ctx.fillRect(platformX, platformY, PLATFORM_WIDTH, PLATFORM_HEIGHT);
-        ctx.fillStyle = THEME_COLORS.PLAYER_HEALTH_BAR; ctx.fillRect(platformX, platformY, PLATFORM_WIDTH, healthBarThickness);
-    }
-    positions.enemies.forEach((enemy) => {
-        const platformX = enemy.x - PLATFORM_WIDTH / 2; const platformY = enemy.platformY;
-        ctx.fillStyle = THEME_COLORS.PLATFORM; ctx.fillRect(platformX, platformY, PLATFORM_WIDTH, PLATFORM_HEIGHT);
-        ctx.fillStyle = THEME_COLORS.ENEMY_HEALTH_BAR; ctx.fillRect(platformX, platformY, PLATFORM_WIDTH, healthBarThickness);
-    });
-
-    if (gameState === 'playing' && !playerArrow && positions.player.x > 0) {
-      // Calculate initial conditions (MUST match firePlayerArrow)
-      const angleRad = (-angle * Math.PI) / 180;
-      const armLength = 20 * SCALE_FACTOR;
-      const bodyTopOffsetY = -60 * SCALE_FACTOR + 5 * SCALE_FACTOR;
-      const shoulderY = positions.player.y + bodyTopOffsetY;
-      const handX = positions.player.x + armLength * Math.cos(angleRad);
-      const handY = shoulderY + armLength * Math.sin(angleRad);
-      const bowRadius = 18 * SCALE_FACTOR;
-      const arrowStartX = handX - bowRadius * 0.5 * Math.cos(angleRad);
-      const arrowStartY = handY - bowRadius * 0.5 * Math.sin(angleRad);
-      const baseSpeed = 9 * Math.sqrt(SCALE_FACTOR);
-      const powerMultiplier = 18 * Math.sqrt(SCALE_FACTOR);
-      const speed = baseSpeed + (power / 100) * powerMultiplier;
-      const initialVx = speed * Math.cos(angleRad);
-      const initialVy = speed * Math.sin(angleRad);
-
-      // Calculate points
-      const trajectoryPoints = calculateTrajectoryPoints(arrowStartX, arrowStartY, initialVx, initialVy);
-
-      // Draw the preview
-      drawTrajectoryPreview(trajectoryPoints);
-  }
-
-    // 6. Draw Characters
-    if (positions.player.x > 0) {
-      drawPlayerArcher(positions.player.x, positions.player.y, angle, power);
-    }
-    positions.enemies.forEach((enemy) => {
-      const aiState = enemyAiRef.current[enemy.id];
-      const drawProgress = aiState?.isDrawingBow ? aiState.drawProgress : 0;
-      drawEnemyArcher(enemy.x, enemy.y, enemy.name, drawProgress);
-    });
-
-    // 7. Draw Arrows
-    if (playerArrow) {
-      const currentAngle = Math.atan2(playerArrow.vy, playerArrow.vx);
-      drawArrow(playerArrow.x, playerArrow.y, currentAngle);
-    }
-    enemyArrows.forEach((arrow) => {
-      const currentAngle = Math.atan2(arrow.vy, arrow.vx);
-      drawArrow(arrow.x, arrow.y, currentAngle);
-    });
-
-  }, [ ctx, positions, angle, power, playerArrow, enemyArrows, drawPlayerArcher, drawEnemyArcher, drawArrow, PLATFORM_WIDTH, PLATFORM_HEIGHT,gameState,calculateTrajectoryPoints, drawTrajectoryPreview,THEME_COLORS, SCALE_FACTOR]);
+    // Draw the main game scene (when gameState === 'playing')
+    const drawGameScene = useCallback(() => {
+      if (!ctx || !canvasRef.current) return;
+      const canvas = canvasRef.current;
+      const cw = canvas.width;
+      const ch = canvas.height;
+  
+      // 1. Background Gradient (Evening Sky)
+      const skyGradient = ctx.createLinearGradient(0, 0, 0, ch * 0.75); // Gradient stops around 3/4 down
+      skyGradient.addColorStop(0, THEME_COLORS.SKY_TOP);       // Dark blue/purple at top
+      skyGradient.addColorStop(0.6, THEME_COLORS.SKY_HORIZON); // Orange glow lower down
+      skyGradient.addColorStop(1, THEME_COLORS.SKY_BOTTOM);    // Muted red/pink near horizon line
+      ctx.fillStyle = skyGradient;
+      ctx.fillRect(0, 0, cw, ch);
+  
+      // OPTIONAL: Draw Stars in the upper sky
+      ctx.save();
+      ctx.fillStyle = "rgba(255, 255, 200, 0.7)"; // Faint yellow stars
+      for (let i = 0; i < 50; i++) { // Adjust number of stars
+          const starX = Math.random() * cw;
+          // Concentrate stars in the upper half (darker area)
+          const starY = Math.random() * (ch * 0.5);
+          const starRadius = Math.random() * 1.2 * SCALE_FACTOR; // Tiny stars
+          ctx.beginPath();
+          ctx.arc(starX, starY, starRadius, 0, Math.PI * 2);
+          ctx.fill();
+      }
+      ctx.restore();
+  
+      // 2. Moon (Softer Yellow) or Setting Sun
+      const moonRadius = Math.min(cw, ch) * 0.15; // Slightly smaller?
+      const moonX = cw * 0.8; // Position slightly differently?
+      const moonY = ch * 0.25;
+      ctx.fillStyle = THEME_COLORS.MOON;
+      ctx.beginPath();
+      ctx.arc(moonX, moonY, moonRadius, 0, Math.PI * 2);
+      ctx.fill();
+      // Optional: Add a glow around the moon/sun
+      ctx.save();
+      ctx.shadowBlur = 25 * SCALE_FACTOR;
+      ctx.shadowColor = THEME_COLORS.MOON; // Glow with moon color
+      ctx.fillStyle = THEME_COLORS.MOON;
+      ctx.beginPath();
+      ctx.arc(moonX, moonY, moonRadius, 0, Math.PI * 2);
+      ctx.fill(); // Draw again with shadow
+      ctx.restore();
+  
+      // Draw subtle craters if desired (make them less prominent)
+      ctx.fillStyle = THEME_COLORS.MOON_CRATER;
+      for (let i = 0; i < 3; i++) { // Fewer craters
+          const craterR = Math.random() * moonRadius * 0.15 + moonRadius * 0.05;
+          const angle_ = Math.random() * Math.PI * 2;
+          const dist = Math.random() * (moonRadius - craterR * 0.8);
+          const craterX = moonX + Math.cos(angle_) * dist;
+          const craterY = moonY + Math.sin(angle_) * dist;
+          ctx.beginPath();
+          ctx.arc(craterX, craterY, craterR, 0, Math.PI * 2);
+          ctx.fill();
+      }
+  
+      // 3. Mountains (Darker Silhouettes)
+      const mountainStartY = ch * 0.60; // Adjust start Y if needed based on sky
+      ctx.fillStyle = THEME_COLORS.MOUNTAIN;
+      ctx.beginPath();
+      // Keep mountain shape, just use the new color
+      ctx.moveTo(0, mountainStartY);
+      ctx.lineTo(cw * 0.15, mountainStartY + 40 * SCALE_FACTOR);
+      ctx.lineTo(cw * 0.3, mountainStartY - 15 * SCALE_FACTOR);
+      ctx.lineTo(cw * 0.5, mountainStartY + 60 * SCALE_FACTOR);
+      ctx.lineTo(cw * 0.7, mountainStartY - 25 * SCALE_FACTOR);
+      ctx.lineTo(cw * 0.85, mountainStartY + 35 * SCALE_FACTOR);
+      ctx.lineTo(cw, mountainStartY - 5 * SCALE_FACTOR);
+      ctx.lineTo(cw, ch); // Extend to bottom
+      ctx.lineTo(0, ch);  // Extend to bottom
+      ctx.closePath();
+      ctx.fill();
+  
+      // 4. Ground (Replaces Lava)
+      const groundLevel = ch - 40 * SCALE_FACTOR; // Height of the ground area
+      ctx.fillStyle = THEME_COLORS.GROUND;
+      ctx.fillRect(0, groundLevel, cw, ch - groundLevel); // Fill bottom area
+  
+      // Optional: Add a slightly darker shade at the very bottom for depth
+      ctx.fillStyle = THEME_COLORS.GROUND_SHADOW;
+      ctx.fillRect(0, ch - 10 * SCALE_FACTOR, cw, 10 * SCALE_FACTOR);
+  
+  
+      // 5. Platforms & Health Bars (use updated THEME_COLORS implicitly)
+      const healthBarThickness = 4 * SCALE_FACTOR;
+      if (positions.player.x > 0) {
+          const platformX = positions.player.x - PLATFORM_WIDTH / 2;
+          const platformY = positions.player.platformY;
+          ctx.fillStyle = THEME_COLORS.PLATFORM;
+          ctx.fillRect(platformX, platformY, PLATFORM_WIDTH, PLATFORM_HEIGHT);
+          ctx.fillStyle = THEME_COLORS.PLAYER_HEALTH_BAR;
+          ctx.fillRect(platformX, platformY, PLATFORM_WIDTH, healthBarThickness);
+      }
+      positions.enemies.forEach((enemy) => {
+          const platformX = enemy.x - PLATFORM_WIDTH / 2;
+          const platformY = enemy.platformY;
+          ctx.fillStyle = THEME_COLORS.PLATFORM;
+          ctx.fillRect(platformX, platformY, PLATFORM_WIDTH, PLATFORM_HEIGHT);
+          ctx.fillStyle = THEME_COLORS.ENEMY_HEALTH_BAR;
+          ctx.fillRect(platformX, platformY, PLATFORM_WIDTH, healthBarThickness);
+      });
+  
+      // --- Trajectory Preview ---
+      if (gameState === 'playing' && !playerArrow && positions.player.x > 0) {
+        // ... (calculation logic remains the same)
+        const angleRad = (-angle * Math.PI) / 180;
+        const armLength = 20 * SCALE_FACTOR;
+        const bodyTopOffsetY = -60 * SCALE_FACTOR + 5 * SCALE_FACTOR;
+        const shoulderY = positions.player.y + bodyTopOffsetY;
+        const handX = positions.player.x + armLength * Math.cos(angleRad);
+        const handY = shoulderY + armLength * Math.sin(angleRad);
+        const bowRadius = 18 * SCALE_FACTOR;
+        const arrowStartX = handX - bowRadius * 0.5 * Math.cos(angleRad);
+        const arrowStartY = handY - bowRadius * 0.5 * Math.sin(angleRad);
+        const baseSpeed = 9 * Math.sqrt(SCALE_FACTOR);
+        const powerMultiplier = 18 * Math.sqrt(SCALE_FACTOR);
+        const speed = baseSpeed + (power / 100) * powerMultiplier;
+        const initialVx = speed * Math.cos(angleRad);
+        const initialVy = speed * Math.sin(angleRad);
+  
+        const trajectoryPoints = calculateTrajectoryPoints(arrowStartX, arrowStartY, initialVx, initialVy);
+        // --- Draw with updated color ---
+        drawTrajectoryPreview(trajectoryPoints); // Will now use THEME_COLORS.TRAJECTORY_DOT
+      }
+  
+      // 6. Draw Characters (use updated THEME_COLORS implicitly)
+      if (positions.player.x > 0) {
+        drawPlayerArcher(positions.player.x, positions.player.y, angle, power);
+      }
+      positions.enemies.forEach((enemy) => {
+        const aiState = enemyAiRef.current[enemy.id];
+        const drawProgress = aiState?.isDrawingBow ? aiState.drawProgress : 0;
+        drawEnemyArcher(enemy.x, enemy.y, enemy.name, drawProgress);
+      });
+  
+      // 7. Draw Arrows (use updated THEME_COLORS implicitly)
+      if (playerArrow) {
+        const currentAngle = Math.atan2(playerArrow.vy, playerArrow.vx);
+        drawArrow(playerArrow.x, playerArrow.y, currentAngle);
+      }
+      enemyArrows.forEach((arrow) => {
+        const currentAngle = Math.atan2(arrow.vy, arrow.vx);
+        drawArrow(arrow.x, arrow.y, currentAngle);
+      });
+  
+    }, [
+        ctx, positions, angle, power, playerArrow, enemyArrows, // Core state
+        drawPlayerArcher, drawEnemyArcher, drawArrow, // Drawing helpers
+        PLATFORM_WIDTH, PLATFORM_HEIGHT, gameState, // Game properties & state
+        calculateTrajectoryPoints, drawTrajectoryPreview, // Trajectory helpers
+        SCALE_FACTOR // Added SCALE_FACTOR as it's used in drawing stars/ground
+       // THEME_COLORS is used extensively but doesn't need to be listed if defined outside component scope
+    ]);
 
   // Fire the player's arrow
   const firePlayerArrow = useCallback(() => {
