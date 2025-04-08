@@ -1,0 +1,119 @@
+/* src/Dashboard.css */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
+  
+  .dashboard {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #f5f5f5; /* Light background for the overall layout */
+  }
+  
+  /* Navigation Bar */
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2c3e50;
+    color: #fff;
+    padding: 1rem 2rem;
+  }
+  
+  .navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  
+  .navbar-links a {
+    margin-left: 1rem;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .navbar-links a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Hero Section */
+  .hero {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(45deg, #2196f3, #e3f2fd);
+    color: #fff;
+  }
+  
+  .hero h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+  
+  .hero p {
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  /* Cards Section */
+  .cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem;
+  }
+  
+  .game-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .game-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .game-image {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+  }
+  
+  .game-card h2 {
+    margin: 0.5rem 0;
+    font-size: 1.25rem;
+  }
+  
+  .game-card p {
+    margin-bottom: 1rem;
+    color: #333;
+  }
+  
+  /* Play Button */
+  .play-button {
+    display: inline-block;
+    background-color: #2196f3;
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background 0.2s ease;
+  }
+  
+  .play-button:hover {
+    background-color: #1976d2;
+  }
+  
+  .play-button:disabled,
+  .play-button[disabled] {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
