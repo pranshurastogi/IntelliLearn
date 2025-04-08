@@ -7,7 +7,7 @@ import ErrorBoundary from './ErrorBoundary';
 
 const opts = {
   clientId: '<Does_Not_Matter_For_Sandbox_mode>',
-  redirectUri: 'http://localhost:3003/',
+  redirectUri: 'http://localhost:3002/',
   referralCode: 'PARTNER6'
 };
 

@@ -1,0 +1,31 @@
+/* OpenCampusCodeQuest.css */
+
+.code-quest-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: #111;
+    color: #fff;
+    min-height: 100vh;
+  }
+  
+  .code-quest-title {
+    font-size: 2.5rem;
+    margin: 20px 0;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+  }
+  
+  .code-quest-canvas {
+    border: 2px solid #555;
+    background: #000;
+    margin: 20px 0;
+  }
+  
+  .code-quest-info {
+    max-width: 600px;
+    text-align: center;
+    font-size: 1.1rem;
+    line-height: 1.6;
+  }
+  

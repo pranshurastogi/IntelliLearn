@@ -1,23 +1,18 @@
-// src/App.js
-import React from 'react';
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route
-} from 'react-router-dom';
-
-import Dashboard from './Dashboard';
-import ArcheryGame from './ArcheryGame'; // already created
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Dashboard from "./Dashboard";
+import ArcheryGame from "./ArcheryGame";
+import BlockMinerGame from "./BlockMinerGame";
+import OpenCampusCodeQuest from "./OpenCampusCodeQuest";
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* The dashboard is your main/landing page */}
         <Route path="/" element={<Dashboard />} />
-
-        {/* Archery game route */}
         <Route path="/archery" element={<ArcheryGame />} />
+        <Route path="/block-miner" element={<BlockMinerGame />} />
+        <Route path="/code-quest" element={<OpenCampusCodeQuest />} />
       </Routes>
     </Router>
   );
