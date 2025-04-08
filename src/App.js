@@ -1,11 +1,25 @@
+// src/App.js
 import React from 'react';
-import ArcheryGame from './ArcheryGame';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route
+} from 'react-router-dom';
+
+import Dashboard from './Dashboard';
+import ArcheryGame from './ArcheryGame'; // already created
 
 function App() {
   return (
-    <div className="App">
-      <ArcheryGame />
-    </div>
+    <Router>
+      <Routes>
+        {/* The dashboard is your main/landing page */}
+        <Route path="/" element={<Dashboard />} />
+
+        {/* Archery game route */}
+        <Route path="/archery" element={<ArcheryGame />} />
+      </Routes>
+    </Router>
   );
 }
 
