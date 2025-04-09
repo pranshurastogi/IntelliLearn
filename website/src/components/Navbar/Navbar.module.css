@@ -1,0 +1,116 @@
+/* src/components/Navbar/Navbar.module.css */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--navbar-height);
+    display: flex;
+    align-items: center;
+    z-index: 1000;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    background-color: transparent; /* Start transparent */
+  }
+  
+  .navbar.scrolled {
+    background-color: var(--dark-background); /* Dark bg on scroll */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  
+  .navbarContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .logo {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-light); /* Always light for contrast */
+    text-decoration: none;
+  }
+  
+  .logo:hover {
+      color: var(--accent-color);
+  }
+  
+  .navLinks {
+    display: flex;
+    align-items: center;
+  }
+  
+  .navLinks a {
+    color: var(--text-light);
+    margin: 0 15px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    position: relative;
+    padding-bottom: 5px; /* Space for underline effect */
+  }
+  
+  .navLinks a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: 0;
+      left: 0;
+      background-color: var(--secondary-color);
+      transition: width 0.3s ease;
+  }
+  
+  .navLinks a:hover::after,
+  .navLinks a.active::after { /* react-scroll adds 'active' class */
+      width: 100%;
+  }
+  
+  
+  .mobileMenuIcon {
+    display: none; /* Hidden by default */
+    cursor: pointer;
+  }
+  
+  .mobileMenuIcon div {
+    width: 25px;
+    height: 3px;
+    background-color: var(--text-light);
+    margin: 5px 0;
+    transition: all 0.3s ease;
+  }
+  
+  /* Responsive adjustments for Navbar */
+  @media (max-width: 992px) {
+    .navLinks {
+      display: none; /* Hide desktop links */
+      position: absolute;
+      top: var(--navbar-height);
+      left: 0;
+      width: 100%;
+      flex-direction: column;
+      background-color: var(--dark-background); /* Needs a background */
+      padding: 20px 0;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+  
+    .navLinks.active {
+      display: flex; /* Show when mobile menu is open */
+    }
+  
+    .navLinks a {
+      margin: 15px 0;
+      text-align: center;
+      width: 100%;
+    }
+     .navLinks a::after { /* Adjust underline for vertical layout */
+        left: 50%;
+        transform: translateX(-50%);
+     }
+  
+  
+    .mobileMenuIcon {
+      display: block; /* Show hamburger icon */
+    }
+  }
