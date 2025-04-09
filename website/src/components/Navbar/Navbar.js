@@ -20,8 +20,8 @@ const Navbar = () => {
   };
 
   const closeMobileMenu = () => {
-     setIsMobileMenuOpen(false);
-  }
+    setIsMobileMenuOpen(false);
+  };
 
   // Smooth scroll parameters
   const scrollProps = {
@@ -36,7 +36,7 @@ const Navbar = () => {
     <nav className={`${styles.navbar} ${isScrolled ? styles.scrolled : ''}`}>
       <div className={`container ${styles.navbarContainer}`}>
         <a href="/" className={styles.logo}>
-        IntelliLearn {/* Replace with actual logo later */}
+          IntelliLearn
         </a>
 
         <div className={`${styles.navLinks} ${isMobileMenuOpen ? styles.active : ''}`}>
@@ -48,8 +48,16 @@ const Navbar = () => {
           <Link to="contact" {...scrollProps}>Contact</Link>
         </div>
 
+        <a
+          href="https://intelli-learn-c8ln.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.openAppButton}
+        >
+          Play Game
+        </a>
+
         <div className={styles.mobileMenuIcon} onClick={toggleMobileMenu}>
-          {/* Simple hamburger icon */}
           <div></div>
           <div></div>
           <div></div>
