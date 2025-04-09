@@ -38,6 +38,11 @@ IntelliLearn is an innovative learning platform that leverages blockchain techno
 - **Node.js** (v14 or later)
 - **npm** or **yarn**
 
+## Project LIVE on :
+
+* OCID signup Intellilearn - https://intelli-learn-c8ln.vercel.app/
+* Intellilearn Website - https://intelli-learn-6gtr.vercel.app/
+
 ### Installation
 
 1. **Clone the Repository**
