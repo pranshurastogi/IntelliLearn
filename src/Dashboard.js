@@ -59,26 +59,26 @@ function Dashboard() {
             className="game-image"
           />
           <h2>OpenCampus Code Quest</h2>
-          <p>
-            Pilot your spaceship, collect tokens, and unlock secrets of OCID Connect and Educhain!
-          </p>
+          <p>Pilot your spaceship, collect tokens, and unlock secrets of OCID Connect and Educhain!</p>
           <Link to="/code-quest" className="play-button">
             Play Game
           </Link>
         </div>
 
-        {/* Additional placeholder card for future games */}
+        {/* DAO Dungeon Escape Game Card */}
         <div className="game-card">
           <img
-            src="https://via.placeholder.com/400x200.png?text=Game+4"
-            alt="Game 4"
+            src="/Images/dao_dungeon.png"
+            alt="DAO Dungeon Escape"
             className="game-image"
           />
-          <h2>Placeholder Game 4</h2>
-          <p>More blockchain adventures coming soon.</p>
-          <button className="play-button" disabled>
-            Coming Soon
-          </button>
+          <h2>DAO Dungeon Escape</h2>
+          <p>
+            Navigate the dungeon, collect all tokens to unlock the door, and escape using blockchain logic!
+          </p>
+          <Link to="/dao-dungeon" className="play-button">
+            Play Game
+          </Link>
         </div>
       </div>
     </div>
